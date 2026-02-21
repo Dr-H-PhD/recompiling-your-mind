@@ -1,0 +1,171 @@
+# Table of Contents
+
+## Part I: The Mental Shift
+
+1. **Why Your PHP Brain Fights Go**
+   - The curse of expertise
+   - Interpreted vs compiled
+   - Dynamic vs static typing
+   - "It just works" vs "prove it works"
+
+2. **Philosophy Differences**
+   - PHP: "Get it done, fix it later"
+   - Go: "Do it right, do it once"
+   - Explicit over implicit
+   - Simplicity over expressiveness
+
+3. **The Type System Transition**
+   - From dynamic to static
+   - Type inference as compromise
+   - Generics and union types
+   - Type assertions
+
+4. **Error Handling—The Hardest Shift**
+   - Why `if err != nil` feels wrong
+   - Exceptions vs explicit errors
+   - Error wrapping
+   - Custom error types
+
+## Part II: Structural Rewiring
+
+5. **From Classes to Structs**
+   - No constructors
+   - Methods as functions with receivers
+   - Value vs pointer receivers
+   - Visibility via case
+
+6. **Inheritance Is Dead—Long Live Composition**
+   - Why Go has no inheritance
+   - Embedding
+   - Interface composition
+   - Flattening hierarchies
+
+7. **Interfaces—Go's Hidden Superpower**
+   - Implicit satisfaction
+   - Small interfaces
+   - Accept interfaces, return structs
+   - The empty interface
+
+8. **Packages and Modules**
+   - Explicit imports
+   - `go.mod` vs `composer.json`
+   - Internal packages
+   - No circular imports
+
+9. **The Standard Library Is Your Framework**
+   - `net/http` vs HttpFoundation
+   - `encoding/json` vs Serializer
+   - `database/sql` vs Doctrine DBAL
+   - `html/template` vs Twig
+
+## Part III: Practical Patterns
+
+10. **Web Development Without a Framework**
+    - HTTP handlers
+    - Middleware patterns
+    - Routing
+    - Request validation
+
+11. **Database Access**
+    - `database/sql` fundamentals
+    - Query builders and ORMs
+    - Migrations
+    - Connection pooling
+
+12. **API Development**
+    - JSON encoding/decoding
+    - OpenAPI integration
+    - Authentication middleware
+    - Validation patterns
+
+13. **Testing—A Different Philosophy**
+    - Table-driven tests
+    - No assertions library
+    - Mocking with interfaces
+    - Benchmarking
+
+14. **Configuration and Environment**
+    - No `.env` magic
+    - Viper patterns
+    - 12-factor principles
+    - Secret management
+
+## Part IV: Concurrency—The New Frontier
+
+15. **Introducing Concurrency**
+    - What PHP doesn't have
+    - Goroutines vs processes
+    - The Go scheduler
+    - Mental model shift
+
+16. **Channels—Message Passing**
+    - Typed channels
+    - Buffered vs unbuffered
+    - Channel directions
+    - Range over channels
+
+17. **Select and Coordination**
+    - Select statements
+    - Timeouts and deadlines
+    - Context package
+    - WaitGroups
+
+18. **Concurrency Patterns**
+    - Worker pools
+    - Fan-out/fan-in
+    - Pipeline processing
+    - Graceful shutdown
+
+19. **When Concurrency Goes Wrong**
+    - Race conditions
+    - The race detector
+    - Deadlocks
+    - Channel leaks
+
+## Part V: Advanced Topics
+
+20. **Reflection and Code Generation**
+    - reflect package
+    - When to use reflection
+    - `go generate`
+    - Build-time vs runtime
+
+21. **Performance Optimisation**
+    - Profiling with pprof
+    - Memory allocation patterns
+    - Escape analysis
+    - Pool patterns
+
+22. **Calling C and System Programming**
+    - CGO basics
+    - Syscalls
+    - CLI tools
+    - Signal handling
+
+## Part VI: Deployment and Migration
+
+23. **Building and Deploying**
+    - Single binary deployment
+    - Cross-compilation
+    - Docker multi-stage builds
+    - Systemd services
+
+24. **Observability**
+    - Structured logging
+    - Prometheus metrics
+    - OpenTelemetry tracing
+    - Health checks
+
+25. **Migration Strategies**
+    - Strangler fig pattern
+    - Side-by-side execution
+    - API gateway approaches
+    - Case study
+
+## Appendices
+
+A. **PHP-to-Go Phrasebook**
+B. **Standard Library Essentials**
+C. **Common Pitfalls**
+D. **Symfony-to-Go Service Mapping**
+E. **Recommended Reading**

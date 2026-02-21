@@ -1,0 +1,15 @@
+---
+title: "Recompiling Your Mind"
+subtitle: "A PHP Developer's Journey to Go"
+author: "Achraf SOLTANI"
+date: "2026"
+rights: "© 2026 Achraf SOLTANI. All rights reserved."
+lang: en
+documentclass: report
+fontsize: 11pt
+geometry: margin=1in
+linkcolor: blue
+urlcolor: blue
+toc: true
+toc-depth: 3
+---
