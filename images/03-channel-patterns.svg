@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00ADD8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Channel Communication Patterns</text>
+
+  <!-- Pattern 1: Unbuffered -->
+  <g transform="translate(50, 70)">
+    <text x="100" y="0" font-family="Arial, sans-serif" font-size="13" fill="#00ADD8" text-anchor="middle" font-weight="bold">Unbuffered Channel</text>
+    <text x="100" y="18" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">ch := make(chan T)</text>
+
+    <!-- Sender -->
+    <rect x="0" y="35" width="60" height="40" rx="4" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="30" y="60" font-family="Consolas, monospace" font-size="10" fill="#10b981" text-anchor="middle">sender</text>
+
+    <!-- Channel -->
+    <rect x="80" y="45" width="40" height="20" rx="3" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+
+    <!-- Receiver -->
+    <rect x="140" y="35" width="60" height="40" rx="4" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="170" y="60" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">receiver</text>
+
+    <!-- Arrows -->
+    <path d="M60 55 L80 55" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M120 55 L140 55" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+    <text x="100" y="100" font-family="Arial, sans-serif" font-size="9" fill="#8b949e" text-anchor="middle">Synchronous: both must be ready</text>
+  </g>
+
+  <!-- Pattern 2: Buffered -->
+  <g transform="translate(280, 70)">
+    <text x="120" y="0" font-family="Arial, sans-serif" font-size="13" fill="#00ADD8" text-anchor="middle" font-weight="bold">Buffered Channel</text>
+    <text x="120" y="18" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">ch := make(chan T, 3)</text>
+
+    <!-- Sender -->
+    <rect x="0" y="35" width="60" height="40" rx="4" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="30" y="60" font-family="Consolas, monospace" font-size="10" fill="#10b981" text-anchor="middle">sender</text>
+
+    <!-- Buffer slots -->
+    <rect x="80" y="45" width="25" height="20" rx="2" fill="#00ADD8" opacity="0.5" stroke="#00ADD8"/>
+    <rect x="108" y="45" width="25" height="20" rx="2" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+    <rect x="136" y="45" width="25" height="20" rx="2" fill="#00ADD8" opacity="0.1" stroke="#00ADD8"/>
+
+    <!-- Receiver -->
+    <rect x="180" y="35" width="60" height="40" rx="4" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="210" y="60" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">receiver</text>
+
+    <!-- Arrows -->
+    <path d="M60 55 L80 55" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M161 55 L180 55" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+    <text x="120" y="100" font-family="Arial, sans-serif" font-size="9" fill="#8b949e" text-anchor="middle">Async: buffer decouples sender/receiver</text>
+  </g>
+
+  <!-- Pattern 3: Fan-Out -->
+  <g transform="translate(550, 70)">
+    <text x="100" y="0" font-family="Arial, sans-serif" font-size="13" fill="#00ADD8" text-anchor="middle" font-weight="bold">Fan-Out</text>
+    <text x="100" y="18" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">Multiple receivers</text>
+
+    <!-- Sender -->
+    <rect x="0" y="45" width="60" height="30" rx="4" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="30" y="65" font-family="Consolas, monospace" font-size="10" fill="#10b981" text-anchor="middle">producer</text>
+
+    <!-- Channel -->
+    <rect x="80" y="50" width="40" height="20" rx="3" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+
+    <!-- Multiple receivers -->
+    <rect x="140" y="25" width="50" height="25" rx="3" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="165" y="42" font-family="Consolas, monospace" font-size="9" fill="#f97316" text-anchor="middle">W1</text>
+
+    <rect x="140" y="55" width="50" height="25" rx="3" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="165" y="72" font-family="Consolas, monospace" font-size="9" fill="#f97316" text-anchor="middle">W2</text>
+
+    <rect x="140" y="85" width="50" height="25" rx="3" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="165" y="102" font-family="Consolas, monospace" font-size="9" fill="#f97316" text-anchor="middle">W3</text>
+
+    <!-- Arrows -->
+    <path d="M60 60 L80 60" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M120 55 L140 38" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M120 60 L140 68" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M120 65 L140 98" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- Pattern 4: Fan-In -->
+  <g transform="translate(50, 220)">
+    <text x="100" y="0" font-family="Arial, sans-serif" font-size="13" fill="#00ADD8" text-anchor="middle" font-weight="bold">Fan-In</text>
+    <text x="100" y="18" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">Multiple senders</text>
+
+    <!-- Multiple senders -->
+    <rect x="0" y="25" width="50" height="25" rx="3" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="25" y="42" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">S1</text>
+
+    <rect x="0" y="55" width="50" height="25" rx="3" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="25" y="72" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">S2</text>
+
+    <rect x="0" y="85" width="50" height="25" rx="3" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="25" y="102" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">S3</text>
+
+    <!-- Channel -->
+    <rect x="80" y="50" width="40" height="20" rx="3" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+
+    <!-- Receiver -->
+    <rect x="140" y="45" width="60" height="30" rx="4" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="170" y="65" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">collector</text>
+
+    <!-- Arrows -->
+    <path d="M50 38 L80 55" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M50 68 L80 60" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M50 98 L80 65" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M120 60 L140 60" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- Pattern 5: Pipeline -->
+  <g transform="translate(280, 220)">
+    <text x="120" y="0" font-family="Arial, sans-serif" font-size="13" fill="#00ADD8" text-anchor="middle" font-weight="bold">Pipeline</text>
+    <text x="120" y="18" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">Chained stages</text>
+
+    <!-- Stage 1 -->
+    <rect x="0" y="45" width="55" height="30" rx="4" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="28" y="65" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">gen</text>
+
+    <!-- Channel 1 -->
+    <rect x="65" y="50" width="25" height="20" rx="2" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+
+    <!-- Stage 2 -->
+    <rect x="100" y="45" width="55" height="30" rx="4" fill="#8b5cf6" opacity="0.3" stroke="#8b5cf6"/>
+    <text x="128" y="65" font-family="Consolas, monospace" font-size="9" fill="#8b5cf6" text-anchor="middle">square</text>
+
+    <!-- Channel 2 -->
+    <rect x="165" y="50" width="25" height="20" rx="2" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+
+    <!-- Stage 3 -->
+    <rect x="200" y="45" width="55" height="30" rx="4" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="228" y="65" font-family="Consolas, monospace" font-size="9" fill="#f97316" text-anchor="middle">print</text>
+
+    <!-- Arrows -->
+    <path d="M55 60 L65 60" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M90 60 L100 60" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M155 60 L165 60" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M190 60 L200 60" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+    <text x="120" y="100" font-family="Arial, sans-serif" font-size="9" fill="#8b949e" text-anchor="middle">Each stage: goroutine + channel</text>
+  </g>
+
+  <!-- Pattern 6: Select -->
+  <g transform="translate(550, 220)">
+    <text x="100" y="0" font-family="Arial, sans-serif" font-size="13" fill="#00ADD8" text-anchor="middle" font-weight="bold">Select (Multiplexing)</text>
+    <text x="100" y="18" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">Wait on multiple channels</text>
+
+    <!-- Multiple channels -->
+    <rect x="0" y="35" width="30" height="15" rx="2" fill="#10b981" opacity="0.3" stroke="#10b981"/>
+    <text x="15" y="46" font-family="Consolas, monospace" font-size="8" fill="#10b981" text-anchor="middle">ch1</text>
+
+    <rect x="0" y="55" width="30" height="15" rx="2" fill="#8b5cf6" opacity="0.3" stroke="#8b5cf6"/>
+    <text x="15" y="66" font-family="Consolas, monospace" font-size="8" fill="#8b5cf6" text-anchor="middle">ch2</text>
+
+    <rect x="0" y="75" width="30" height="15" rx="2" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="15" y="86" font-family="Consolas, monospace" font-size="8" fill="#f97316" text-anchor="middle">done</text>
+
+    <!-- Select box -->
+    <rect x="60" y="30" width="80" height="70" rx="4" fill="#00ADD8" opacity="0.15" stroke="#00ADD8" stroke-width="2"/>
+    <text x="100" y="55" font-family="Consolas, monospace" font-size="11" fill="#00ADD8" text-anchor="middle">select</text>
+    <text x="100" y="72" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">{...}</text>
+
+    <!-- Arrows -->
+    <path d="M30 42 L60 50" stroke="#10b981" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M30 62 L60 62" stroke="#8b5cf6" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <path d="M30 82 L60 74" stroke="#f97316" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+    <!-- Output -->
+    <rect x="160" y="50" width="50" height="25" rx="3" fill="#c9d1d9" opacity="0.2" stroke="#c9d1d9"/>
+    <text x="185" y="67" font-family="Consolas, monospace" font-size="9" fill="#c9d1d9" text-anchor="middle">action</text>
+
+    <path d="M140 62 L160 62" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- Code examples at bottom -->
+  <g transform="translate(50, 380)">
+    <rect x="0" y="0" width="700" height="100" rx="4" fill="#161b22" stroke="#30363d"/>
+    <text x="20" y="25" font-family="Consolas, monospace" font-size="11" fill="#8b949e">// Common patterns</text>
+    <text x="20" y="45" font-family="Consolas, monospace" font-size="11" fill="#00ADD8">ch &lt;- value</text>
+    <text x="150" y="45" font-family="Consolas, monospace" font-size="11" fill="#8b949e">// Send (blocks if full/no receiver)</text>
+    <text x="20" y="65" font-family="Consolas, monospace" font-size="11" fill="#f97316">value := &lt;-ch</text>
+    <text x="150" y="65" font-family="Consolas, monospace" font-size="11" fill="#8b949e">// Receive (blocks if empty)</text>
+    <text x="20" y="85" font-family="Consolas, monospace" font-size="11" fill="#10b981">close(ch)</text>
+    <text x="150" y="85" font-family="Consolas, monospace" font-size="11" fill="#8b949e">// Signal no more values (sender only)</text>
+
+    <text x="420" y="45" font-family="Consolas, monospace" font-size="11" fill="#8b5cf6">for v := range ch { }</text>
+    <text x="600" y="45" font-family="Consolas, monospace" font-size="11" fill="#8b949e">// Iterate until closed</text>
+    <text x="420" y="65" font-family="Consolas, monospace" font-size="11" fill="#8b5cf6">v, ok := &lt;-ch</text>
+    <text x="600" y="65" font-family="Consolas, monospace" font-size="11" fill="#8b949e">// Check if closed</text>
+  </g>
+</svg>

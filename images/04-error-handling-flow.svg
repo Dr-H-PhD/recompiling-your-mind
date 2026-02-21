@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8b949e"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Error Handling: PHP Exceptions vs Go Errors</text>
+
+  <!-- PHP Side -->
+  <g transform="translate(50, 60)">
+    <text x="150" y="0" font-family="Arial, sans-serif" font-size="14" fill="#777BB4" text-anchor="middle" font-weight="bold">PHP Exception Flow</text>
+
+    <!-- Call stack -->
+    <rect x="0" y="30" width="300" height="200" rx="4" fill="#1c1e26" stroke="#777BB4" opacity="0.5"/>
+
+    <!-- Main -->
+    <rect x="20" y="50" width="260" height="35" rx="3" fill="#3d3f5c" stroke="#777BB4"/>
+    <text x="150" y="72" font-family="Consolas, monospace" font-size="11" fill="#c9d1d9" text-anchor="middle">main()</text>
+
+    <!-- Controller -->
+    <rect x="40" y="95" width="220" height="35" rx="3" fill="#4a4d6e" stroke="#777BB4"/>
+    <text x="150" y="117" font-family="Consolas, monospace" font-size="11" fill="#c9d1d9" text-anchor="middle">Controller::action()</text>
+
+    <!-- Service -->
+    <rect x="60" y="140" width="180" height="35" rx="3" fill="#575a80" stroke="#777BB4"/>
+    <text x="150" y="162" font-family="Consolas, monospace" font-size="11" fill="#c9d1d9" text-anchor="middle">Service::process()</text>
+
+    <!-- Exception thrown -->
+    <rect x="80" y="185" width="140" height="30" rx="3" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+    <text x="150" y="205" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">throw Exception</text>
+
+    <!-- Exception bubble up -->
+    <path d="M320 200 Q350 150 320 95 Q350 50 330 30" stroke="#f97316" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+    <text x="360" y="120" font-family="Consolas, monospace" font-size="9" fill="#f97316">bubbles up</text>
+
+    <!-- Try-catch -->
+    <rect x="0" y="250" width="300" height="70" rx="4" fill="#10b981" opacity="0.1" stroke="#10b981"/>
+    <text x="150" y="275" font-family="Consolas, monospace" font-size="11" fill="#10b981" text-anchor="middle">try { ... } catch (Exception $e) {</text>
+    <text x="150" y="295" font-family="Consolas, monospace" font-size="11" fill="#10b981" text-anchor="middle">    // handle error</text>
+    <text x="150" y="315" font-family="Consolas, monospace" font-size="11" fill="#10b981" text-anchor="middle">}</text>
+
+    <!-- Arrow to catch -->
+    <path d="M330 30 Q380 30 380 270 L305 270" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+    <text x="390" y="150" font-family="Consolas, monospace" font-size="9" fill="#f97316">jumps to</text>
+    <text x="390" y="165" font-family="Consolas, monospace" font-size="9" fill="#f97316">handler</text>
+
+    <!-- Note -->
+    <text x="150" y="355" font-family="Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">Hidden control flow - exceptions jump</text>
+    <text x="150" y="370" font-family="Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">past intermediate code</text>
+  </g>
+
+  <!-- Go Side -->
+  <g transform="translate(450, 60)">
+    <text x="150" y="0" font-family="Arial, sans-serif" font-size="14" fill="#00ADD8" text-anchor="middle" font-weight="bold">Go Error Flow</text>
+
+    <!-- Call stack with explicit returns -->
+    <rect x="0" y="30" width="300" height="280" rx="4" fill="#1c1e26" stroke="#00ADD8" opacity="0.5"/>
+
+    <!-- Main -->
+    <rect x="20" y="50" width="260" height="55" rx="3" fill="#1a3a4a" stroke="#00ADD8"/>
+    <text x="150" y="68" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">func main() {</text>
+    <text x="150" y="83" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">if err != nil { log.Fatal(err) }</text>
+    <text x="150" y="98" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">}</text>
+
+    <!-- Handler -->
+    <rect x="20" y="115" width="260" height="55" rx="3" fill="#1a4a4a" stroke="#00ADD8"/>
+    <text x="150" y="133" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">func handler() error {</text>
+    <text x="150" y="148" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">if err != nil { return err }</text>
+    <text x="150" y="163" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">}</text>
+
+    <!-- Service -->
+    <rect x="20" y="180" width="260" height="55" rx="3" fill="#1a4a5a" stroke="#00ADD8"/>
+    <text x="150" y="198" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">func process() error {</text>
+    <text x="150" y="213" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">if err != nil { return fmt.Errorf(...) }</text>
+    <text x="150" y="228" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">}</text>
+
+    <!-- Error origin -->
+    <rect x="20" y="245" width="260" height="45" rx="3" fill="#1a5a5a" stroke="#00ADD8"/>
+    <text x="150" y="263" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">func dbQuery() (T, error) {</text>
+    <text x="150" y="278" font-family="Consolas, monospace" font-size="10" fill="#f97316" text-anchor="middle">return nil, errors.New("failed")</text>
+
+    <!-- Error return arrows -->
+    <path d="M285 265 L295 265 L295 205 L285 205" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+    <path d="M285 205 L305 205 L305 140 L285 140" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+    <path d="M285 140 L315 140 L315 75 L285 75" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+
+    <text x="325" y="170" font-family="Consolas, monospace" font-size="9" fill="#f97316">explicit</text>
+    <text x="325" y="185" font-family="Consolas, monospace" font-size="9" fill="#f97316">return</text>
+
+    <!-- Note -->
+    <text x="150" y="340" font-family="Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">Visible control flow - errors return</text>
+    <text x="150" y="355" font-family="Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">through each level explicitly</text>
+  </g>
+
+  <!-- Comparison summary -->
+  <g transform="translate(50, 400)">
+    <rect x="0" y="0" width="700" height="40" rx="4" fill="#161b22" stroke="#30363d"/>
+    <text x="180" y="25" font-family="Arial, sans-serif" font-size="11" fill="#777BB4" text-anchor="middle">PHP: Exceptions jump to distant handlers</text>
+    <text x="520" y="25" font-family="Arial, sans-serif" font-size="11" fill="#00ADD8" text-anchor="middle">Go: Errors return through call stack explicitly</text>
+  </g>
+</svg>

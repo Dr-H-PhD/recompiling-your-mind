@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="450" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8b949e"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">PHP Inheritance vs Go Composition</text>
+
+  <!-- PHP Side -->
+  <g transform="translate(30, 60)">
+    <text x="170" y="0" font-family="Arial, sans-serif" font-size="14" fill="#777BB4" text-anchor="middle" font-weight="bold">PHP: Class Hierarchy</text>
+
+    <!-- Base class -->
+    <rect x="100" y="30" width="140" height="50" rx="4" fill="#3d3f5c" stroke="#777BB4" stroke-width="2"/>
+    <text x="170" y="50" font-family="Consolas, monospace" font-size="10" fill="#777BB4" text-anchor="middle">abstract class</text>
+    <text x="170" y="68" font-family="Consolas, monospace" font-size="11" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Animal</text>
+
+    <!-- Arrow down -->
+    <path d="M170 80 L170 110" stroke="#8b949e" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+    <!-- Middle class -->
+    <rect x="100" y="115" width="140" height="50" rx="4" fill="#4a4d6e" stroke="#777BB4" stroke-width="2"/>
+    <text x="170" y="135" font-family="Consolas, monospace" font-size="10" fill="#777BB4" text-anchor="middle">abstract class</text>
+    <text x="170" y="153" font-family="Consolas, monospace" font-size="11" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Mammal extends Animal</text>
+
+    <!-- Arrows down -->
+    <path d="M130 165 L80 195" stroke="#8b949e" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+    <path d="M210 165 L260 195" stroke="#8b949e" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+    <!-- Leaf classes -->
+    <rect x="20" y="200" width="120" height="40" rx="4" fill="#575a80" stroke="#777BB4" stroke-width="2"/>
+    <text x="80" y="225" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">Dog extends Mammal</text>
+
+    <rect x="200" y="200" width="120" height="40" rx="4" fill="#575a80" stroke="#777BB4" stroke-width="2"/>
+    <text x="260" y="225" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">Cat extends Mammal</text>
+
+    <!-- Problems -->
+    <rect x="20" y="260" width="300" height="70" rx="4" fill="#f97316" opacity="0.1" stroke="#f97316"/>
+    <text x="170" y="285" font-family="Arial, sans-serif" font-size="10" fill="#f97316" text-anchor="middle">Problems:</text>
+    <text x="170" y="302" font-family="Arial, sans-serif" font-size="9" fill="#f97316" text-anchor="middle">- Rigid hierarchy, hard to change</text>
+    <text x="170" y="317" font-family="Arial, sans-serif" font-size="9" fill="#f97316" text-anchor="middle">- Gorilla-banana problem</text>
+  </g>
+
+  <!-- Go Side -->
+  <g transform="translate(420, 60)">
+    <text x="170" y="0" font-family="Arial, sans-serif" font-size="14" fill="#00ADD8" text-anchor="middle" font-weight="bold">Go: Composition + Interfaces</text>
+
+    <!-- Interfaces row -->
+    <rect x="20" y="30" width="100" height="45" rx="4" fill="#1a3a4a" stroke="#00ADD8" stroke-width="2"/>
+    <text x="70" y="50" font-family="Consolas, monospace" font-size="10" fill="#00ADD8" text-anchor="middle">type Walker</text>
+    <text x="70" y="65" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">Walk()</text>
+
+    <rect x="140" y="30" width="100" height="45" rx="4" fill="#1a3a4a" stroke="#00ADD8" stroke-width="2"/>
+    <text x="190" y="50" font-family="Consolas, monospace" font-size="10" fill="#00ADD8" text-anchor="middle">type Speaker</text>
+    <text x="190" y="65" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">Speak()</text>
+
+    <rect x="260" y="30" width="100" height="45" rx="4" fill="#1a3a4a" stroke="#00ADD8" stroke-width="2"/>
+    <text x="310" y="50" font-family="Consolas, monospace" font-size="10" fill="#00ADD8" text-anchor="middle">type Swimmer</text>
+    <text x="310" y="65" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">Swim()</text>
+
+    <!-- Embedded struct -->
+    <rect x="100" y="100" width="180" height="55" rx="4" fill="#1a4a5a" stroke="#00ADD8" stroke-width="2"/>
+    <text x="190" y="120" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">type Legs struct {</text>
+    <text x="190" y="137" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">Count int</text>
+    <text x="190" y="150" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">}</text>
+
+    <!-- Dog struct with embedding -->
+    <rect x="60" y="180" width="260" height="80" rx="4" fill="#1a5a5a" stroke="#00ADD8" stroke-width="2"/>
+    <text x="190" y="200" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">type Dog struct {</text>
+    <text x="190" y="218" font-family="Consolas, monospace" font-size="10" fill="#00ADD8" text-anchor="middle">Legs  // embedded</text>
+    <text x="190" y="236" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">Name string</text>
+    <text x="190" y="252" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9" text-anchor="middle">}</text>
+
+    <!-- Satisfies label -->
+    <text x="190" y="280" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">// Methods: Walk(), Speak()</text>
+    <text x="190" y="295" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">// Satisfies: Walker, Speaker</text>
+
+    <!-- Benefits -->
+    <rect x="20" y="310" width="340" height="70" rx="4" fill="#10b981" opacity="0.1" stroke="#10b981"/>
+    <text x="190" y="335" font-family="Arial, sans-serif" font-size="10" fill="#10b981" text-anchor="middle">Benefits:</text>
+    <text x="190" y="352" font-family="Arial, sans-serif" font-size="9" fill="#10b981" text-anchor="middle">- Flat structure, easy to reason about</text>
+    <text x="190" y="367" font-family="Arial, sans-serif" font-size="9" fill="#10b981" text-anchor="middle">- Mix behaviours freely via embedding</text>
+  </g>
+
+  <!-- Bottom comparison -->
+  <g transform="translate(50, 405)">
+    <rect x="0" y="0" width="700" height="35" rx="4" fill="#161b22" stroke="#30363d"/>
+    <text x="175" y="22" font-family="Arial, sans-serif" font-size="11" fill="#777BB4" text-anchor="middle">"is-a" relationship (tightly coupled)</text>
+    <text x="525" y="22" font-family="Arial, sans-serif" font-size="11" fill="#00ADD8" text-anchor="middle">"has-a" + "can-do" (loosely coupled)</text>
+  </g>
+</svg>

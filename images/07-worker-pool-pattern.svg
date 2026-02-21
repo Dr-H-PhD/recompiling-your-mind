@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="700" height="350" viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00ADD8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="350" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="350" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Worker Pool Pattern</text>
+
+  <!-- Producer -->
+  <g transform="translate(50, 80)">
+    <rect x="0" y="0" width="100" height="60" rx="4" fill="#10b981" opacity="0.2" stroke="#10b981" stroke-width="2"/>
+    <text x="50" y="25" font-family="Arial, sans-serif" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">Producer</text>
+    <text x="50" y="45" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">sends jobs</text>
+  </g>
+
+  <!-- Jobs Channel -->
+  <g transform="translate(180, 80)">
+    <rect x="0" y="10" width="120" height="40" rx="4" fill="#00ADD8" opacity="0.2" stroke="#00ADD8" stroke-width="2"/>
+    <text x="60" y="35" font-family="Consolas, monospace" font-size="11" fill="#00ADD8" text-anchor="middle">jobs chan</text>
+
+    <!-- Jobs in channel -->
+    <rect x="10" y="18" width="25" height="24" rx="2" fill="#00ADD8" opacity="0.6"/>
+    <rect x="40" y="18" width="25" height="24" rx="2" fill="#00ADD8" opacity="0.5"/>
+    <rect x="70" y="18" width="25" height="24" rx="2" fill="#00ADD8" opacity="0.4"/>
+  </g>
+
+  <!-- Arrow from producer to jobs -->
+  <path d="M150 110 L180 110" stroke="#00ADD8" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Workers -->
+  <g transform="translate(340, 50)">
+    <text x="60" y="0" font-family="Arial, sans-serif" font-size="12" fill="#8b949e" text-anchor="middle">Worker Pool (N workers)</text>
+
+    <!-- Worker 1 -->
+    <rect x="0" y="15" width="120" height="40" rx="4" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="60" y="40" font-family="Consolas, monospace" font-size="10" fill="#8b5cf6" text-anchor="middle">Worker 1 (G)</text>
+
+    <!-- Worker 2 -->
+    <rect x="0" y="65" width="120" height="40" rx="4" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="60" y="90" font-family="Consolas, monospace" font-size="10" fill="#8b5cf6" text-anchor="middle">Worker 2 (G)</text>
+
+    <!-- Worker 3 -->
+    <rect x="0" y="115" width="120" height="40" rx="4" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="60" y="140" font-family="Consolas, monospace" font-size="10" fill="#8b5cf6" text-anchor="middle">Worker 3 (G)</text>
+
+    <!-- Worker N -->
+    <text x="60" y="175" font-family="Arial" font-size="14" fill="#8b949e" text-anchor="middle">...</text>
+
+    <rect x="0" y="185" width="120" height="40" rx="4" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="60" y="210" font-family="Consolas, monospace" font-size="10" fill="#8b5cf6" text-anchor="middle">Worker N (G)</text>
+  </g>
+
+  <!-- Arrows from jobs to workers -->
+  <path d="M300 100 L340 85" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M300 110 L340 135" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M300 120 L340 185" stroke="#00ADD8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Results Channel -->
+  <g transform="translate(500, 120)">
+    <rect x="0" y="0" width="120" height="40" rx="4" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="2"/>
+    <text x="60" y="25" font-family="Consolas, monospace" font-size="11" fill="#f97316" text-anchor="middle">results chan</text>
+  </g>
+
+  <!-- Arrows from workers to results -->
+  <path d="M460 85 L500 125" stroke="#f97316" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M460 135 L500 135" stroke="#f97316" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M460 185 L500 145" stroke="#f97316" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M460 255 L500 155" stroke="#f97316" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Collector -->
+  <g transform="translate(550, 190)">
+    <rect x="0" y="0" width="100" height="60" rx="4" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="2"/>
+    <text x="50" y="25" font-family="Arial, sans-serif" font-size="11" fill="#f97316" text-anchor="middle" font-weight="bold">Collector</text>
+    <text x="50" y="45" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">aggregates</text>
+  </g>
+
+  <!-- Arrow from results to collector -->
+  <path d="M560 165 L560 190" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Code example -->
+  <g transform="translate(50, 270)">
+    <rect x="0" y="0" width="600" height="65" rx="4" fill="#161b22" stroke="#30363d"/>
+    <text x="20" y="20" font-family="Consolas, monospace" font-size="10" fill="#8b949e">// Worker pool with bounded concurrency</text>
+    <text x="20" y="38" font-family="Consolas, monospace" font-size="10" fill="#00ADD8">for w := 0; w &lt; numWorkers; w++ {</text>
+    <text x="20" y="53" font-family="Consolas, monospace" font-size="10" fill="#c9d1d9">    go worker(jobs, results)</text>
+    <text x="300" y="38" font-family="Consolas, monospace" font-size="10" fill="#8b949e">// Fixed number of goroutines</text>
+    <text x="300" y="53" font-family="Consolas, monospace" font-size="10" fill="#8b949e">// prevents resource exhaustion</text>
+    <text x="20" y="60" font-family="Consolas, monospace" font-size="10" fill="#00ADD8">}</text>
+  </g>
+</svg>

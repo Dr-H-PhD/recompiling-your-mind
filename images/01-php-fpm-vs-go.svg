@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="phpGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#777BB4"/>
+      <stop offset="100%" style="stop-color:#8892BF"/>
+    </linearGradient>
+    <linearGradient id="goGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00ADD8"/>
+      <stop offset="100%" style="stop-color:#5DC9E2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">PHP-FPM vs Go Server Architecture</text>
+
+  <!-- PHP-FPM Side -->
+  <g transform="translate(50, 60)">
+    <text x="150" y="0" font-family="Arial, sans-serif" font-size="14" fill="#777BB4" text-anchor="middle" font-weight="bold">PHP-FPM Model</text>
+
+    <!-- Nginx -->
+    <rect x="100" y="20" width="100" height="40" rx="4" fill="#4a5568" stroke="#718096"/>
+    <text x="150" y="45" font-family="Consolas, monospace" font-size="11" fill="#fff" text-anchor="middle">nginx</text>
+
+    <!-- Arrow -->
+    <path d="M150 60 L150 80" stroke="#718096" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- PHP-FPM Master -->
+    <rect x="75" y="85" width="150" height="35" rx="4" fill="url(#phpGrad)"/>
+    <text x="150" y="107" font-family="Consolas, monospace" font-size="10" fill="#fff" text-anchor="middle">php-fpm master</text>
+
+    <!-- Workers -->
+    <g transform="translate(0, 130)">
+      <rect x="20" y="0" width="60" height="50" rx="3" fill="#5a5f88" stroke="#777BB4"/>
+      <text x="50" y="20" font-family="Consolas, monospace" font-size="9" fill="#fff" text-anchor="middle">Worker 1</text>
+      <text x="50" y="35" font-family="Consolas, monospace" font-size="8" fill="#c9d1d9" text-anchor="middle">30MB</text>
+
+      <rect x="95" y="0" width="60" height="50" rx="3" fill="#5a5f88" stroke="#777BB4"/>
+      <text x="125" y="20" font-family="Consolas, monospace" font-size="9" fill="#fff" text-anchor="middle">Worker 2</text>
+      <text x="125" y="35" font-family="Consolas, monospace" font-size="8" fill="#c9d1d9" text-anchor="middle">30MB</text>
+
+      <rect x="170" y="0" width="60" height="50" rx="3" fill="#5a5f88" stroke="#777BB4"/>
+      <text x="200" y="20" font-family="Consolas, monospace" font-size="9" fill="#fff" text-anchor="middle">Worker 3</text>
+      <text x="200" y="35" font-family="Consolas, monospace" font-size="8" fill="#c9d1d9" text-anchor="middle">30MB</text>
+
+      <text x="245" y="25" font-family="Arial" font-size="14" fill="#8b949e">...</text>
+
+      <rect x="265" y="0" width="60" height="50" rx="3" fill="#5a5f88" stroke="#777BB4"/>
+      <text x="295" y="20" font-family="Consolas, monospace" font-size="9" fill="#fff" text-anchor="middle">Worker N</text>
+      <text x="295" y="35" font-family="Consolas, monospace" font-size="8" fill="#c9d1d9" text-anchor="middle">30MB</text>
+    </g>
+
+    <!-- Stats -->
+    <text x="150" y="220" font-family="Arial, sans-serif" font-size="11" fill="#f97316" text-anchor="middle">200 workers = 6GB RAM</text>
+    <text x="150" y="238" font-family="Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">1 request per worker</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="400" y1="50" x2="400" y2="350" stroke="#30363d" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- Go Side -->
+  <g transform="translate(420, 60)">
+    <text x="165" y="0" font-family="Arial, sans-serif" font-size="14" fill="#00ADD8" text-anchor="middle" font-weight="bold">Go Server Model</text>
+
+    <!-- Single Go Process -->
+    <rect x="40" y="20" width="250" height="200" rx="6" fill="#1c2128" stroke="url(#goGrad)" stroke-width="2"/>
+    <text x="165" y="45" font-family="Consolas, monospace" font-size="11" fill="#00ADD8" text-anchor="middle">Go Process (single binary)</text>
+
+    <!-- HTTP Server -->
+    <rect x="60" y="60" width="210" height="30" rx="3" fill="#00ADD8" opacity="0.3"/>
+    <text x="165" y="80" font-family="Consolas, monospace" font-size="10" fill="#00ADD8" text-anchor="middle">net/http Server</text>
+
+    <!-- Goroutines -->
+    <g transform="translate(60, 100)">
+      <circle cx="20" cy="15" r="12" fill="#00ADD8" opacity="0.7"/>
+      <text x="20" y="19" font-family="Consolas, monospace" font-size="8" fill="#0d1117" text-anchor="middle">G</text>
+
+      <circle cx="55" cy="15" r="12" fill="#00ADD8" opacity="0.7"/>
+      <text x="55" y="19" font-family="Consolas, monospace" font-size="8" fill="#0d1117" text-anchor="middle">G</text>
+
+      <circle cx="90" cy="15" r="12" fill="#00ADD8" opacity="0.7"/>
+      <text x="90" y="19" font-family="Consolas, monospace" font-size="8" fill="#0d1117" text-anchor="middle">G</text>
+
+      <circle cx="125" cy="15" r="12" fill="#00ADD8" opacity="0.7"/>
+      <text x="125" y="19" font-family="Consolas, monospace" font-size="8" fill="#0d1117" text-anchor="middle">G</text>
+
+      <text x="150" y="19" font-family="Arial" font-size="10" fill="#8b949e">...</text>
+
+      <circle cx="175" cy="15" r="12" fill="#00ADD8" opacity="0.7"/>
+      <text x="175" y="19" font-family="Consolas, monospace" font-size="8" fill="#0d1117" text-anchor="middle">G</text>
+
+      <text x="105" y="45" font-family="Consolas, monospace" font-size="9" fill="#8b949e" text-anchor="middle">Goroutines (~2KB each)</text>
+    </g>
+
+    <!-- Scheduler -->
+    <rect x="60" y="160" width="210" height="25" rx="3" fill="#10b981" opacity="0.3"/>
+    <text x="165" y="177" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">Go Scheduler (G-M-P)</text>
+
+    <!-- Stats -->
+    <text x="165" y="250" font-family="Arial, sans-serif" font-size="11" fill="#10b981" text-anchor="middle">100K goroutines = 200MB RAM</text>
+    <text x="165" y="268" font-family="Arial, sans-serif" font-size="10" fill="#8b949e" text-anchor="middle">1 goroutine per request</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(50, 360)">
+    <rect x="0" y="0" width="12" height="12" fill="#777BB4"/>
+    <text x="18" y="10" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Process-per-request</text>
+
+    <rect x="150" y="0" width="12" height="12" fill="#00ADD8"/>
+    <text x="168" y="10" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Goroutine-per-request</text>
+
+    <text x="350" y="10" font-family="Arial, sans-serif" font-size="10" fill="#f97316">30x more efficient memory usage</text>
+  </g>
+</svg>
