@@ -421,6 +421,325 @@ func main() {
 }
 ```
 
+## When You Need a Framework: Gin and Echo
+
+So far we've used only the standard library. But sometimes you want more structure—especially coming from Symfony. Go has excellent web frameworks that feel familiar.
+
+### Why Consider a Framework?
+
+| Need | net/http | Framework |
+|------|----------|-----------|
+| Basic routing | ✓ | ✓ |
+| Path parameters | ✓ (Go 1.22+) | ✓ |
+| Route groups | Manual | Built-in |
+| Parameter validation | Manual | Built-in |
+| JSON binding | Manual | One-liner |
+| Error handling | Manual | Centralised |
+
+For PHP developers: Gin/Echo are closer to Slim PHP than to Symfony—lightweight and fast.
+
+### Gin: The Most Popular
+
+Gin is the Symfony of Go frameworks—widely used, well-documented, battle-tested.
+
+```bash
+go get -u github.com/gin-gonic/gin
+```
+
+```go
+package main
+
+import (
+    "net/http"
+    "github.com/gin-gonic/gin"
+)
+
+func main() {
+    r := gin.Default()  // Includes logger and recovery middleware
+
+    // Routes - similar to Symfony annotations
+    r.GET("/users", listUsers)
+    r.GET("/users/:id", getUser)      // :id like Symfony {id}
+    r.POST("/users", createUser)
+    r.PUT("/users/:id", updateUser)
+    r.DELETE("/users/:id", deleteUser)
+
+    r.Run(":8080")
+}
+
+// Handler - simpler than net/http
+func getUser(c *gin.Context) {
+    id := c.Param("id")  // Path parameter
+
+    user, err := findUser(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, user)
+}
+
+// JSON binding - like Symfony's handleRequest()
+func createUser(c *gin.Context) {
+    var input CreateUserInput
+
+    // Binds JSON and validates
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Input is bound and validated
+    user := createUserFromInput(input)
+    c.JSON(http.StatusCreated, user)
+}
+```
+
+### Gin Middleware
+
+```go
+func main() {
+    r := gin.New()  // Without default middleware
+
+    // Global middleware
+    r.Use(gin.Logger())
+    r.Use(gin.Recovery())
+
+    // Route groups with middleware - like Symfony firewall
+    api := r.Group("/api")
+    api.Use(authMiddleware())
+    {
+        api.GET("/users", listUsers)
+        api.POST("/users", createUser)
+    }
+
+    // Admin routes with different middleware
+    admin := r.Group("/admin")
+    admin.Use(authMiddleware(), adminMiddleware())
+    {
+        admin.GET("/stats", getStats)
+    }
+}
+
+// Gin middleware signature
+func authMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        token := c.GetHeader("Authorization")
+        if !isValid(token) {
+            c.AbortWithStatusJSON(http.StatusUnauthorized,
+                gin.H{"error": "unauthorized"})
+            return
+        }
+        c.Set("user_id", extractUserID(token))  // Like request attributes
+        c.Next()
+    }
+}
+```
+
+### Gin Validation with Tags
+
+```go
+type CreateUserInput struct {
+    Email    string `json:"email" binding:"required,email"`
+    Password string `json:"password" binding:"required,min=8"`
+    Name     string `json:"name" binding:"required,max=100"`
+}
+
+func createUser(c *gin.Context) {
+    var input CreateUserInput
+
+    // ShouldBindJSON validates using binding tags
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, gin.H{
+            "error":   "validation failed",
+            "details": err.Error(),
+        })
+        return
+    }
+
+    // All validation passed
+}
+```
+
+### Echo: The Alternative
+
+Echo is similar to Gin but with different design choices—slightly faster, different API style.
+
+```bash
+go get -u github.com/labstack/echo/v4
+```
+
+```go
+package main
+
+import (
+    "net/http"
+    "github.com/labstack/echo/v4"
+    "github.com/labstack/echo/v4/middleware"
+)
+
+func main() {
+    e := echo.New()
+
+    // Built-in middleware
+    e.Use(middleware.Logger())
+    e.Use(middleware.Recover())
+
+    // Routes
+    e.GET("/users", listUsers)
+    e.GET("/users/:id", getUser)
+    e.POST("/users", createUser)
+
+    e.Start(":8080")
+}
+
+// Echo handler - returns error
+func getUser(c echo.Context) error {
+    id := c.Param("id")
+
+    user, err := findUser(id)
+    if err != nil {
+        return c.JSON(http.StatusNotFound, map[string]string{
+            "error": "user not found",
+        })
+    }
+
+    return c.JSON(http.StatusOK, user)
+}
+
+// Echo binding
+func createUser(c echo.Context) error {
+    var input CreateUserInput
+
+    if err := c.Bind(&input); err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{
+            "error": err.Error(),
+        })
+    }
+
+    // Validate with external validator
+    if err := c.Validate(&input); err != nil {
+        return c.JSON(http.StatusUnprocessableEntity, map[string]string{
+            "error": err.Error(),
+        })
+    }
+
+    return c.JSON(http.StatusCreated, createUserFromInput(input))
+}
+```
+
+### Echo Route Groups
+
+```go
+func main() {
+    e := echo.New()
+
+    // API group
+    api := e.Group("/api")
+    api.Use(authMiddleware)
+
+    api.GET("/users", listUsers)
+    api.POST("/users", createUser)
+
+    // Nested groups
+    v1 := api.Group("/v1")
+    v1.GET("/legacy", legacyHandler)
+
+    v2 := api.Group("/v2")
+    v2.GET("/modern", modernHandler)
+}
+
+// Echo middleware signature
+func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+    return func(c echo.Context) error {
+        token := c.Request().Header.Get("Authorization")
+        if !isValid(token) {
+            return c.JSON(http.StatusUnauthorized, map[string]string{
+                "error": "unauthorized",
+            })
+        }
+        c.Set("user_id", extractUserID(token))
+        return next(c)
+    }
+}
+```
+
+### Framework Comparison
+
+| Feature | Gin | Echo | net/http |
+|---------|-----|------|----------|
+| Performance | Excellent | Excellent | Good |
+| Learning curve | Low | Low | Lowest |
+| JSON binding | Built-in | Built-in | Manual |
+| Validation | Built-in | Plugin | Manual |
+| Route groups | ✓ | ✓ | Manual |
+| Middleware | ✓ | ✓ | Manual |
+| WebSocket | Plugin | Built-in | Manual |
+| Dependencies | Minimal | Minimal | None |
+
+### When to Use What
+
+**Use `net/http` when:**
+- Building simple APIs
+- Minimising dependencies
+- Learning Go
+- Maximum control needed
+
+**Use Gin when:**
+- Building larger APIs
+- Team familiarity matters
+- Need built-in validation
+- Coming from Django/Flask
+
+**Use Echo when:**
+- Need WebSocket support
+- Prefer error-returning handlers
+- Building microservices
+- Need automatic TLS
+
+### Framework-Agnostic Tip
+
+Design your business logic independently:
+
+```go
+// Service layer - no framework dependency
+type UserService struct {
+    repo UserRepository
+}
+
+func (s *UserService) Create(ctx context.Context, input CreateUserInput) (*User, error) {
+    // Business logic here
+}
+
+// Gin handler
+func ginCreateUser(svc *UserService) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        var input CreateUserInput
+        if err := c.ShouldBindJSON(&input); err != nil {
+            c.JSON(400, gin.H{"error": err.Error()})
+            return
+        }
+        user, err := svc.Create(c.Request.Context(), input)
+        // ...
+    }
+}
+
+// Echo handler - same service, different adapter
+func echoCreateUser(svc *UserService) echo.HandlerFunc {
+    return func(c echo.Context) error {
+        var input CreateUserInput
+        if err := c.Bind(&input); err != nil {
+            return c.JSON(400, map[string]string{"error": err.Error()})
+        }
+        user, err := svc.Create(c.Request().Context(), input)
+        // ...
+    }
+}
+```
+
+This is the Go equivalent of Symfony's hexagonal architecture—your domain logic stays clean.
+
 ## Summary
 
 - **Handlers** are functions or structs implementing `http.Handler`
@@ -429,6 +748,7 @@ func main() {
 - **Validation** uses struct tags or manual validation
 - **Response helpers** provide consistent JSON responses
 - **Sessions** use libraries like `gorilla/sessions` or JWT
+- **Gin/Echo** provide Symfony-like convenience when needed
 
 ---
 
