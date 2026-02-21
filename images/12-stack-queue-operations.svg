@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="380" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e94560"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00ADD8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="380" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Stack vs Queue: Go Slice Operations</text>
+
+  <!-- STACK SECTION (Left) -->
+  <g transform="translate(200, 200)">
+    <!-- Label -->
+    <text x="0" y="-130" font-family="Arial, sans-serif" font-size="14" fill="#00ADD8" text-anchor="middle" font-weight="bold">Stack (LIFO)</text>
+    <text x="0" y="-110" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">Last In, First Out</text>
+
+    <!-- Stack container -->
+    <rect x="-50" y="-80" width="100" height="180" rx="5" fill="none" stroke="#00ADD8" stroke-width="2" stroke-dasharray="5,3"/>
+
+    <!-- Stack elements -->
+    <rect x="-40" y="60" width="80" height="30" rx="3" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+    <text x="0" y="80" font-family="Consolas, monospace" font-size="11" fill="#00ADD8" text-anchor="middle">1</text>
+
+    <rect x="-40" y="25" width="80" height="30" rx="3" fill="#00ADD8" opacity="0.4" stroke="#00ADD8"/>
+    <text x="0" y="45" font-family="Consolas, monospace" font-size="11" fill="#00ADD8" text-anchor="middle">2</text>
+
+    <rect x="-40" y="-10" width="80" height="30" rx="3" fill="#00ADD8" opacity="0.5" stroke="#00ADD8"/>
+    <text x="0" y="10" font-family="Consolas, monospace" font-size="11" fill="#00ADD8" text-anchor="middle">3</text>
+
+    <rect x="-40" y="-45" width="80" height="30" rx="3" fill="#10b981" opacity="0.6" stroke="#10b981" stroke-width="2"/>
+    <text x="0" y="-25" font-family="Consolas, monospace" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">4</text>
+    <text x="50" y="-25" font-family="Arial, sans-serif" font-size="9" fill="#10b981">TOP</text>
+
+    <!-- Push arrow -->
+    <path d="M-90 -50 L-55 -50" stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+    <text x="-100" y="-60" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="end">Push</text>
+    <text x="-100" y="-45" font-family="Consolas, monospace" font-size="8" fill="#8b949e" text-anchor="end">append(s, v)</text>
+
+    <!-- Pop arrow -->
+    <path d="M55 -50 L90 -50" stroke="#e94560" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+    <text x="100" y="-60" font-family="Consolas, monospace" font-size="9" fill="#e94560">Pop</text>
+    <text x="100" y="-45" font-family="Consolas, monospace" font-size="8" fill="#8b949e">s[:len-1]</text>
+
+    <!-- Index labels -->
+    <text x="-55" y="80" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="end">[0]</text>
+    <text x="-55" y="45" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="end">[1]</text>
+    <text x="-55" y="10" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="end">[2]</text>
+    <text x="-55" y="-25" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="end">[3]</text>
+  </g>
+
+  <!-- QUEUE SECTION (Right) -->
+  <g transform="translate(600, 200)">
+    <!-- Label -->
+    <text x="0" y="-130" font-family="Arial, sans-serif" font-size="14" fill="#f97316" text-anchor="middle" font-weight="bold">Queue (FIFO)</text>
+    <text x="0" y="-110" font-family="Consolas, monospace" font-size="10" fill="#8b949e" text-anchor="middle">First In, First Out</text>
+
+    <!-- Queue container (horizontal) -->
+    <rect x="-120" y="-25" width="240" height="50" rx="5" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="5,3"/>
+
+    <!-- Queue elements -->
+    <rect x="-110" y="-15" width="50" height="30" rx="3" fill="#e94560" opacity="0.6" stroke="#e94560" stroke-width="2"/>
+    <text x="-85" y="5" font-family="Consolas, monospace" font-size="11" fill="#e94560" text-anchor="middle" font-weight="bold">1</text>
+    <text x="-85" y="35" font-family="Arial, sans-serif" font-size="9" fill="#e94560" text-anchor="middle">FRONT</text>
+
+    <rect x="-55" y="-15" width="50" height="30" rx="3" fill="#f97316" opacity="0.4" stroke="#f97316"/>
+    <text x="-30" y="5" font-family="Consolas, monospace" font-size="11" fill="#f97316" text-anchor="middle">2</text>
+
+    <rect x="0" y="-15" width="50" height="30" rx="3" fill="#f97316" opacity="0.5" stroke="#f97316"/>
+    <text x="25" y="5" font-family="Consolas, monospace" font-size="11" fill="#f97316" text-anchor="middle">3</text>
+
+    <rect x="55" y="-15" width="50" height="30" rx="3" fill="#10b981" opacity="0.6" stroke="#10b981" stroke-width="2"/>
+    <text x="80" y="5" font-family="Consolas, monospace" font-size="11" fill="#10b981" text-anchor="middle" font-weight="bold">4</text>
+    <text x="80" y="35" font-family="Arial, sans-serif" font-size="9" fill="#10b981" text-anchor="middle">BACK</text>
+
+    <!-- Enqueue arrow -->
+    <path d="M80 -60 L80 -30" stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+    <text x="80" y="-70" font-family="Consolas, monospace" font-size="9" fill="#10b981" text-anchor="middle">Enqueue</text>
+    <text x="80" y="-85" font-family="Consolas, monospace" font-size="8" fill="#8b949e" text-anchor="middle">append(q, v)</text>
+
+    <!-- Dequeue arrow -->
+    <path d="M-85 30 L-85 60" stroke="#e94560" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
+    <text x="-85" y="75" font-family="Consolas, monospace" font-size="9" fill="#e94560" text-anchor="middle">Dequeue</text>
+    <text x="-85" y="88" font-family="Consolas, monospace" font-size="8" fill="#8b949e" text-anchor="middle">q[1:]</text>
+
+    <!-- Index labels -->
+    <text x="-85" y="-28" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[0]</text>
+    <text x="-30" y="-28" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[1]</text>
+    <text x="25" y="-28" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[2]</text>
+    <text x="80" y="-28" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[3]</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(200, 350)">
+    <rect x="0" y="-8" width="12" height="12" rx="2" fill="#10b981" opacity="0.5"/>
+    <text x="20" y="2" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Add operation</text>
+
+    <rect x="130" y="-8" width="12" height="12" rx="2" fill="#e94560" opacity="0.5"/>
+    <text x="150" y="2" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Remove operation</text>
+
+    <rect x="280" y="-8" width="12" height="12" rx="2" fill="#00ADD8" opacity="0.5"/>
+    <text x="300" y="2" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Stack (vertical)</text>
+
+    <rect x="410" y="-8" width="12" height="12" rx="2" fill="#f97316" opacity="0.5"/>
+    <text x="430" y="2" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Queue (horizontal)</text>
+  </g>
+</svg>

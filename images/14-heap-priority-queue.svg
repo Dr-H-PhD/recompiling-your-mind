@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrowDown" markerWidth="10" markerHeight="7" refX="5" refY="0" orient="auto">
+      <polygon points="0 0, 10 0, 5 7" fill="#8b949e"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" fill="#c9d1d9" text-anchor="middle" font-weight="bold">Go container/heap: Binary Heap (Max-Heap Example)</text>
+
+  <!-- Tree visualization -->
+  <g transform="translate(400, 170)">
+    <!-- Level 0: Root -->
+    <g transform="translate(0, -90)">
+      <circle cx="0" cy="0" r="25" fill="#10b981" opacity="0.3" stroke="#10b981" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#10b981" text-anchor="middle" font-weight="bold">9</text>
+      <text x="0" y="-35" font-family="Arial, sans-serif" font-size="9" fill="#10b981" text-anchor="middle">Root (max)</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[0]</text>
+    </g>
+
+    <!-- Lines to level 1 -->
+    <line x1="-10" y1="-68" x2="-80" y2="-25" stroke="#8b949e" stroke-width="1.5"/>
+    <line x1="10" y1="-68" x2="80" y2="-25" stroke="#8b949e" stroke-width="1.5"/>
+
+    <!-- Level 1 -->
+    <g transform="translate(-100, 0)">
+      <circle cx="0" cy="0" r="25" fill="#00ADD8" opacity="0.3" stroke="#00ADD8" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#00ADD8" text-anchor="middle" font-weight="bold">7</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[1]</text>
+    </g>
+
+    <g transform="translate(100, 0)">
+      <circle cx="0" cy="0" r="25" fill="#00ADD8" opacity="0.3" stroke="#00ADD8" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#00ADD8" text-anchor="middle" font-weight="bold">8</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[2]</text>
+    </g>
+
+    <!-- Lines to level 2 -->
+    <line x1="-110" y1="22" x2="-150" y2="65" stroke="#8b949e" stroke-width="1.5"/>
+    <line x1="-90" y1="22" x2="-50" y2="65" stroke="#8b949e" stroke-width="1.5"/>
+    <line x1="90" y1="22" x2="50" y2="65" stroke="#8b949e" stroke-width="1.5"/>
+    <line x1="110" y1="22" x2="150" y2="65" stroke="#8b949e" stroke-width="1.5"/>
+
+    <!-- Level 2 -->
+    <g transform="translate(-170, 90)">
+      <circle cx="0" cy="0" r="25" fill="#f97316" opacity="0.3" stroke="#f97316" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#f97316" text-anchor="middle" font-weight="bold">3</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[3]</text>
+    </g>
+
+    <g transform="translate(-30, 90)">
+      <circle cx="0" cy="0" r="25" fill="#f97316" opacity="0.3" stroke="#f97316" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#f97316" text-anchor="middle" font-weight="bold">5</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[4]</text>
+    </g>
+
+    <g transform="translate(30, 90)">
+      <circle cx="0" cy="0" r="25" fill="#f97316" opacity="0.3" stroke="#f97316" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#f97316" text-anchor="middle" font-weight="bold">6</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[5]</text>
+    </g>
+
+    <g transform="translate(170, 90)">
+      <circle cx="0" cy="0" r="25" fill="#f97316" opacity="0.3" stroke="#f97316" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="14" fill="#f97316" text-anchor="middle" font-weight="bold">2</text>
+      <text x="35" y="5" font-family="Consolas, monospace" font-size="8" fill="#6e7681">[6]</text>
+    </g>
+  </g>
+
+  <!-- Array representation -->
+  <g transform="translate(400, 320)">
+    <text x="0" y="-25" font-family="Arial, sans-serif" font-size="11" fill="#8b949e" text-anchor="middle">Underlying slice: []int{9, 7, 8, 3, 5, 6, 2}</text>
+
+    <!-- Array boxes -->
+    <g transform="translate(-140, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#10b981" opacity="0.3" stroke="#10b981" stroke-width="2"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#10b981" text-anchor="middle" font-weight="bold">9</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[0]</text>
+    </g>
+
+    <g transform="translate(-100, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#00ADD8" text-anchor="middle">7</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[1]</text>
+    </g>
+
+    <g transform="translate(-60, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#00ADD8" opacity="0.3" stroke="#00ADD8"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#00ADD8" text-anchor="middle">8</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[2]</text>
+    </g>
+
+    <g transform="translate(-20, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#f97316" text-anchor="middle">3</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[3]</text>
+    </g>
+
+    <g transform="translate(20, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#f97316" text-anchor="middle">5</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[4]</text>
+    </g>
+
+    <g transform="translate(60, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#f97316" text-anchor="middle">6</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[5]</text>
+    </g>
+
+    <g transform="translate(100, 0)">
+      <rect x="-20" y="-15" width="40" height="30" fill="#f97316" opacity="0.3" stroke="#f97316"/>
+      <text x="0" y="5" font-family="Consolas, monospace" font-size="12" fill="#f97316" text-anchor="middle">2</text>
+      <text x="0" y="30" font-family="Consolas, monospace" font-size="8" fill="#6e7681" text-anchor="middle">[6]</text>
+    </g>
+  </g>
+
+  <!-- Formulas -->
+  <g transform="translate(50, 100)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="11" fill="#c9d1d9" font-weight="bold">Index formulas:</text>
+    <text x="0" y="20" font-family="Consolas, monospace" font-size="10" fill="#8b949e">parent(i) = (i-1)/2</text>
+    <text x="0" y="40" font-family="Consolas, monospace" font-size="10" fill="#8b949e">left(i)   = 2*i + 1</text>
+    <text x="0" y="60" font-family="Consolas, monospace" font-size="10" fill="#8b949e">right(i)  = 2*i + 2</text>
+  </g>
+
+  <!-- Operations -->
+  <g transform="translate(700, 100)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="11" fill="#c9d1d9" font-weight="bold">Operations:</text>
+    <text x="0" y="20" font-family="Consolas, monospace" font-size="10" fill="#10b981">heap.Push   O(log n)</text>
+    <text x="0" y="40" font-family="Consolas, monospace" font-size="10" fill="#e94560">heap.Pop    O(log n)</text>
+    <text x="0" y="60" font-family="Consolas, monospace" font-size="10" fill="#fbbf24">heap.Init   O(n)</text>
+    <text x="0" y="80" font-family="Consolas, monospace" font-size="10" fill="#00ADD8">heap.Fix    O(log n)</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(100, 375)">
+    <circle cx="6" cy="0" r="6" fill="#10b981" opacity="0.5"/>
+    <text x="20" y="4" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Root (max value)</text>
+
+    <circle cx="146" cy="0" r="6" fill="#00ADD8" opacity="0.5"/>
+    <text x="160" y="4" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Level 1</text>
+
+    <circle cx="236" cy="0" r="6" fill="#f97316" opacity="0.5"/>
+    <text x="250" y="4" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Level 2 (leaves)</text>
+
+    <text x="380" y="4" font-family="Arial, sans-serif" font-size="10" fill="#8b949e">Heap property: parent >= children</text>
+  </g>
+</svg>
