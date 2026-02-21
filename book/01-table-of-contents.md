@@ -83,7 +83,7 @@
     - OpenAPI integration
     - Authentication middleware
     - Validation patterns
-    - gRPC and Protocol Buffers
+    - gRPC: all streaming patterns, resilience, TLS/mTLS
     - GraphQL with gqlgen
 
 13. **Testing—A Different Philosophy**

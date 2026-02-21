@@ -604,6 +604,443 @@ server := grpc.NewServer(
 )
 ```
 
+### Client-Side Streaming
+
+The client sends multiple messages; the server responds once after receiving all:
+
+```protobuf
+// average.proto
+service AverageService {
+    rpc ComputeAverage(stream Number) returns (AverageResponse);
+}
+
+message Number {
+    int32 value = 1;
+}
+
+message AverageResponse {
+    double average = 1;
+}
+```
+
+Server implementation:
+
+```go
+func (s *averageServer) ComputeAverage(stream pb.AverageService_ComputeAverageServer) error {
+    var sum, count int32
+
+    for {
+        num, err := stream.Recv()
+        if err == io.EOF {
+            // Client finished sending
+            average := float64(sum) / float64(count)
+            return stream.SendAndClose(&pb.AverageResponse{Average: average})
+        }
+        if err != nil {
+            return err
+        }
+        sum += num.Value
+        count++
+    }
+}
+```
+
+Client implementation:
+
+```go
+func sendNumbers(client pb.AverageServiceClient, numbers []int32) (*pb.AverageResponse, error) {
+    stream, err := client.ComputeAverage(context.Background())
+    if err != nil {
+        return nil, err
+    }
+
+    for _, num := range numbers {
+        if err := stream.Send(&pb.Number{Value: num}); err != nil {
+            return nil, err
+        }
+    }
+
+    // Close stream and get response
+    return stream.CloseAndRecv()
+}
+```
+
+### Bi-Directional Streaming
+
+Both client and server send streams simultaneously—ideal for chat, gaming, or real-time collaboration:
+
+```protobuf
+// chat.proto
+service ChatService {
+    rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message ChatMessage {
+    string user = 1;
+    string content = 2;
+    int64 timestamp = 3;
+}
+```
+
+Server implementation:
+
+```go
+func (s *chatServer) Chat(stream pb.ChatService_ChatServer) error {
+    for {
+        msg, err := stream.Recv()
+        if err == io.EOF {
+            return nil
+        }
+        if err != nil {
+            return err
+        }
+
+        // Broadcast to all clients (simplified)
+        response := &pb.ChatMessage{
+            User:      msg.User,
+            Content:   msg.Content,
+            Timestamp: time.Now().Unix(),
+        }
+
+        if err := stream.Send(response); err != nil {
+            return err
+        }
+    }
+}
+```
+
+Client with concurrent send/receive:
+
+```go
+func chat(client pb.ChatServiceClient) error {
+    stream, err := client.Chat(context.Background())
+    if err != nil {
+        return err
+    }
+
+    // Receive messages in goroutine
+    go func() {
+        for {
+            msg, err := stream.Recv()
+            if err == io.EOF {
+                return
+            }
+            if err != nil {
+                log.Printf("receive error: %v", err)
+                return
+            }
+            fmt.Printf("[%s]: %s\n", msg.User, msg.Content)
+        }
+    }()
+
+    // Send messages from stdin
+    scanner := bufio.NewScanner(os.Stdin)
+    for scanner.Scan() {
+        if err := stream.Send(&pb.ChatMessage{
+            User:    "me",
+            Content: scanner.Text(),
+        }); err != nil {
+            return err
+        }
+    }
+
+    return stream.CloseSend()
+}
+```
+
+### Deadlines and Timeouts
+
+PHP relies on `max_execution_time`. gRPC uses context deadlines for precise timeout control:
+
+```go
+// Client: set deadline
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+user, err := client.GetUser(ctx, &pb.GetUserRequest{Id: 1})
+if err != nil {
+    if status.Code(err) == codes.DeadlineExceeded {
+        log.Println("request timed out")
+    }
+    return err
+}
+```
+
+Server: respect the deadline:
+
+```go
+func (s *userServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.User, error) {
+    // Check if deadline already exceeded
+    if ctx.Err() == context.DeadlineExceeded {
+        return nil, status.Error(codes.DeadlineExceeded, "deadline exceeded")
+    }
+
+    // Pass context to downstream calls
+    user, err := s.repo.Find(ctx, req.Id)
+    if err != nil {
+        if ctx.Err() == context.DeadlineExceeded {
+            return nil, status.Error(codes.DeadlineExceeded, "deadline exceeded")
+        }
+        return nil, status.Error(codes.Internal, "database error")
+    }
+
+    return toProtoUser(user), nil
+}
+```
+
+### Retry Patterns
+
+Implement retries with exponential backoff for transient failures:
+
+```go
+func withRetry[T any](
+    ctx context.Context,
+    fn func() (T, error),
+    maxRetries int,
+    initialBackoff time.Duration,
+) (T, error) {
+    var result T
+    var lastErr error
+
+    for attempt := 0; attempt <= maxRetries; attempt++ {
+        result, lastErr = fn()
+        if lastErr == nil {
+            return result, nil
+        }
+
+        // Only retry on transient errors
+        if !isRetryable(lastErr) {
+            return result, lastErr
+        }
+
+        if attempt < maxRetries {
+            backoff := initialBackoff * time.Duration(1<<attempt)
+            select {
+            case <-time.After(backoff):
+            case <-ctx.Done():
+                return result, ctx.Err()
+            }
+        }
+    }
+
+    return result, fmt.Errorf("max retries exceeded: %w", lastErr)
+}
+
+func isRetryable(err error) bool {
+    code := status.Code(err)
+    return code == codes.Unavailable ||
+           code == codes.DeadlineExceeded ||
+           code == codes.ResourceExhausted
+}
+
+// Usage
+user, err := withRetry(ctx, func() (*pb.User, error) {
+    return client.GetUser(ctx, &pb.GetUserRequest{Id: 1})
+}, 3, 100*time.Millisecond)
+```
+
+### Circuit Breaker Pattern
+
+Prevent cascading failures by failing fast when a service is unhealthy:
+
+```go
+import "github.com/sony/gobreaker"
+
+type UserClient struct {
+    client pb.UserServiceClient
+    cb     *gobreaker.CircuitBreaker
+}
+
+func NewUserClient(conn *grpc.ClientConn) *UserClient {
+    settings := gobreaker.Settings{
+        Name:        "user-service",
+        MaxRequests: 5,                // Requests allowed in half-open state
+        Interval:    10 * time.Second, // Reset counts after interval
+        Timeout:     30 * time.Second, // Time in open state before half-open
+        ReadyToTrip: func(counts gobreaker.Counts) bool {
+            // Open circuit if failure rate > 50%
+            failureRatio := float64(counts.TotalFailures) / float64(counts.Requests)
+            return counts.Requests >= 10 && failureRatio >= 0.5
+        },
+    }
+
+    return &UserClient{
+        client: pb.NewUserServiceClient(conn),
+        cb:     gobreaker.NewCircuitBreaker(settings),
+    }
+}
+
+func (c *UserClient) GetUser(ctx context.Context, id int64) (*pb.User, error) {
+    result, err := c.cb.Execute(func() (interface{}, error) {
+        return c.client.GetUser(ctx, &pb.GetUserRequest{Id: id})
+    })
+
+    if err != nil {
+        if err == gobreaker.ErrOpenState {
+            return nil, status.Error(codes.Unavailable, "service temporarily unavailable")
+        }
+        return nil, err
+    }
+
+    return result.(*pb.User), nil
+}
+```
+
+### TLS/mTLS Security
+
+Production gRPC requires TLS encryption. Generate certificates:
+
+```bash
+# Generate CA
+openssl genrsa -out ca.key 4096
+openssl req -new -x509 -days 365 -key ca.key -out ca.crt -subj "/CN=MyCA"
+
+# Generate server certificate
+openssl genrsa -out server.key 4096
+openssl req -new -key server.key -out server.csr -subj "/CN=localhost"
+openssl x509 -req -days 365 -in server.csr -CA ca.crt -CAkey ca.key \
+    -CAcreateserial -out server.crt
+
+# For mTLS: generate client certificate
+openssl genrsa -out client.key 4096
+openssl req -new -key client.key -out client.csr -subj "/CN=client"
+openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key \
+    -CAcreateserial -out client.crt
+```
+
+Server with TLS:
+
+```go
+func createTLSServer() (*grpc.Server, error) {
+    cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
+    if err != nil {
+        return nil, err
+    }
+
+    creds := credentials.NewTLS(&tls.Config{
+        Certificates: []tls.Certificate{cert},
+        ClientAuth:   tls.NoClientCert, // TLS only
+    })
+
+    return grpc.NewServer(grpc.Creds(creds)), nil
+}
+```
+
+Server with mTLS (mutual authentication):
+
+```go
+func createMTLSServer() (*grpc.Server, error) {
+    cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
+    if err != nil {
+        return nil, err
+    }
+
+    // Load CA cert to verify clients
+    caCert, err := os.ReadFile("ca.crt")
+    if err != nil {
+        return nil, err
+    }
+    caPool := x509.NewCertPool()
+    caPool.AppendCertsFromPEM(caCert)
+
+    creds := credentials.NewTLS(&tls.Config{
+        Certificates: []tls.Certificate{cert},
+        ClientAuth:   tls.RequireAndVerifyClientCert,
+        ClientCAs:    caPool,
+    })
+
+    return grpc.NewServer(grpc.Creds(creds)), nil
+}
+```
+
+Client with TLS:
+
+```go
+func createTLSClient(serverAddr string) (*grpc.ClientConn, error) {
+    caCert, err := os.ReadFile("ca.crt")
+    if err != nil {
+        return nil, err
+    }
+    caPool := x509.NewCertPool()
+    caPool.AppendCertsFromPEM(caCert)
+
+    creds := credentials.NewTLS(&tls.Config{
+        RootCAs: caPool,
+    })
+
+    return grpc.Dial(serverAddr, grpc.WithTransportCredentials(creds))
+}
+```
+
+Client with mTLS:
+
+```go
+func createMTLSClient(serverAddr string) (*grpc.ClientConn, error) {
+    cert, err := tls.LoadX509KeyPair("client.crt", "client.key")
+    if err != nil {
+        return nil, err
+    }
+
+    caCert, err := os.ReadFile("ca.crt")
+    if err != nil {
+        return nil, err
+    }
+    caPool := x509.NewCertPool()
+    caPool.AppendCertsFromPEM(caCert)
+
+    creds := credentials.NewTLS(&tls.Config{
+        Certificates: []tls.Certificate{cert},
+        RootCAs:      caPool,
+    })
+
+    return grpc.Dial(serverAddr, grpc.WithTransportCredentials(creds))
+}
+```
+
+### Health Checks
+
+gRPC has a standard health checking protocol. Implement it for load balancers and Kubernetes:
+
+```go
+import "google.golang.org/grpc/health"
+import healthpb "google.golang.org/grpc/health/grpc_health_v1"
+
+func main() {
+    server := grpc.NewServer()
+
+    // Register your services
+    pb.RegisterUserServiceServer(server, &userServer{})
+
+    // Register health service
+    healthServer := health.NewServer()
+    healthpb.RegisterHealthServer(server, healthServer)
+
+    // Set service status
+    healthServer.SetServingStatus("user.UserService", healthpb.HealthCheckResponse_SERVING)
+
+    // Update status based on dependencies
+    go func() {
+        for {
+            if dbHealthy() {
+                healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+            } else {
+                healthServer.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+            }
+            time.Sleep(10 * time.Second)
+        }
+    }()
+
+    lis, _ := net.Listen("tcp", ":50051")
+    server.Serve(lis)
+}
+```
+
+Check health from client or CLI:
+
+```bash
+grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check
+```
+
 ## GraphQL: Flexible Queries
 
 GraphQL lets clients request exactly the data they need—no over-fetching or under-fetching. PHP has webonyx/graphql-php or API Platform's GraphQL support.
@@ -809,6 +1246,10 @@ For PHP developers: REST is familiar territory. Use gRPC for internal services w
 - **Error responses** follow consistent structure
 - **Versioning** is implemented manually (URL or header)
 - **gRPC** provides high-performance binary communication with streaming
+- **Four streaming patterns**: unary, server-streaming, client-streaming, bi-directional
+- **Resilience**: deadlines, retries with backoff, circuit breakers
+- **TLS/mTLS** secures gRPC in production
+- **Health checks** enable load balancer and Kubernetes integration
 - **GraphQL** enables flexible queries with client-controlled data fetching
 - **Choose REST** for public APIs, **gRPC** for internal services, **GraphQL** for complex frontends
 
@@ -839,3 +1280,15 @@ For PHP developers: REST is familiar territory. Use gRPC for internal services w
 11. **GraphQL API**: Set up gqlgen for a simple schema. Implement query and mutation resolvers.
 
 12. **DataLoader Implementation**: Add dataloaders to prevent N+1 queries in nested GraphQL resolvers.
+
+13. **Client-Side Streaming**: Implement a file upload service using client-side streaming. The client streams file chunks; the server responds with upload status.
+
+14. **Bi-Directional Streaming**: Build a simple chat service where multiple clients can exchange messages in real-time.
+
+15. **Deadline Propagation**: Create a service chain (A → B → C) where deadlines propagate correctly through all services.
+
+16. **Circuit Breaker**: Implement a gRPC client with circuit breaker that fails fast when the downstream service is unhealthy.
+
+17. **mTLS Setup**: Configure mutual TLS authentication between a gRPC client and server. Test that unauthenticated clients are rejected.
+
+18. **Health Check Service**: Add the standard gRPC health check to a service. Test with `grpcurl` and configure Kubernetes readiness probe.
