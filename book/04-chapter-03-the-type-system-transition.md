@@ -569,6 +569,558 @@ func extractName(data any) string {
 
 This verbosity is intentional—it's showing you how much type information you've lost. In Go, you're better off designing types that don't require such assertions.
 
+## Data Structures: PHP/SPL vs Go
+
+PHP developers often use the Standard PHP Library (SPL) for data structures. Go takes a different approach: fewer built-in structures, but powerful primitives that compose well.
+
+![PHP Array vs Go Types](../images/11-php-array-vs-go-types.png)
+
+### PHP Arrays vs Go's Trio
+
+PHP's array is a Swiss Army knife—ordered map, list, stack, queue, and set all in one:
+
+```php
+// PHP array does everything
+$list = [1, 2, 3];                    // Indexed list
+$map = ['name' => 'Alice', 'age' => 30];  // Associative array
+$mixed = [0 => 'first', 'key' => 'value']; // Both!
+
+// Dynamic operations
+$list[] = 4;                          // Append
+unset($list[1]);                      // Remove
+$exists = isset($map['name']);        // Check key
+```
+
+Go separates these concerns into three distinct types:
+
+```go
+// Slice: dynamic, ordered list
+list := []int{1, 2, 3}
+list = append(list, 4)                // Append
+
+// Map: unordered key-value pairs
+m := map[string]any{"name": "Alice", "age": 30}
+_, exists := m["name"]                // Check key
+delete(m, "age")                      // Remove
+
+// Array: fixed-size, value type
+var arr [3]int = [3]int{1, 2, 3}      // Size is part of the type
+// arr = append(arr, 4)               // Won't compile!
+```
+
+Key differences:
+
+| Feature | PHP array | Go slice | Go map | Go array |
+|---------|-----------|----------|--------|----------|
+| Size | Dynamic | Dynamic | Dynamic | Fixed |
+| Ordered | Yes | Yes | No | Yes |
+| Key types | int/string | int only | Any comparable | int only |
+| Memory | Heap | Heap (backing array) | Heap | Stack (if small) |
+| Zero value | Empty array | `nil` | `nil` | Zero-filled |
+
+### SplStack and SplQueue
+
+![Stack vs Queue Operations](../images/12-stack-queue-operations.png)
+
+PHP's SPL provides explicit stack and queue types:
+
+```php
+// PHP SplStack (LIFO)
+$stack = new SplStack();
+$stack->push(1);
+$stack->push(2);
+echo $stack->pop();  // 2
+
+// PHP SplQueue (FIFO)
+$queue = new SplQueue();
+$queue->enqueue('first');
+$queue->enqueue('second');
+echo $queue->dequeue();  // 'first'
+```
+
+Go uses slices for both, with different access patterns:
+
+```go
+// Go stack using slice (LIFO)
+stack := []int{}
+stack = append(stack, 1)       // Push
+stack = append(stack, 2)
+top := stack[len(stack)-1]     // Peek
+stack = stack[:len(stack)-1]   // Pop
+fmt.Println(top)               // 2
+
+// Go queue using slice (FIFO)
+queue := []string{}
+queue = append(queue, "first")  // Enqueue
+queue = append(queue, "second")
+front := queue[0]               // Peek
+queue = queue[1:]               // Dequeue
+fmt.Println(front)              // "first"
+```
+
+For type safety and encapsulation, wrap in a generic struct:
+
+```go
+type Stack[T any] struct {
+    items []T
+}
+
+func (s *Stack[T]) Push(item T) {
+    s.items = append(s.items, item)
+}
+
+func (s *Stack[T]) Pop() (T, bool) {
+    if len(s.items) == 0 {
+        var zero T
+        return zero, false
+    }
+    item := s.items[len(s.items)-1]
+    s.items = s.items[:len(s.items)-1]
+    return item, true
+}
+
+func (s *Stack[T]) Len() int {
+    return len(s.items)
+}
+```
+
+### SplDoublyLinkedList
+
+![Doubly Linked List Structure](../images/13-linked-list-structure.png)
+
+PHP's doubly-linked list provides O(1) insertion/removal at both ends:
+
+```php
+$list = new SplDoublyLinkedList();
+$list->push('end');      // Add to end
+$list->unshift('start'); // Add to start
+$list->pop();            // Remove from end
+$list->shift();          // Remove from start
+
+// Iterate
+foreach ($list as $item) {
+    echo $item;
+}
+```
+
+Go's `container/list` provides equivalent functionality:
+
+```go
+import "container/list"
+
+l := list.New()
+l.PushBack("end")        // Add to end
+l.PushFront("start")     // Add to start
+l.Remove(l.Back())       // Remove from end
+l.Remove(l.Front())      // Remove from start
+
+// Iterate (no generics, uses interface{})
+for e := l.Front(); e != nil; e = e.Next() {
+    fmt.Println(e.Value)  // Type assertion needed
+}
+
+// Type-safe wrapper
+type StringList struct {
+    list *list.List
+}
+
+func (sl *StringList) PushBack(s string) {
+    sl.list.PushBack(s)
+}
+
+func (sl *StringList) Front() (string, bool) {
+    if sl.list.Len() == 0 {
+        return "", false
+    }
+    return sl.list.Front().Value.(string), true
+}
+```
+
+When to use `container/list`:
+- Frequent insertions/deletions in the middle
+- Need to remove elements while iterating
+- Large elements where copying is expensive
+
+When to use slices instead:
+- Random access needed
+- Iteration performance matters (cache-friendly)
+- Simple append/pop operations
+
+### SplHeap and SplPriorityQueue
+
+![Heap and Priority Queue](../images/14-heap-priority-queue.png)
+
+PHP's heap implementations require extending a class:
+
+```php
+class MaxHeap extends SplMaxHeap {
+    protected function compare($a, $b): int {
+        return $a - $b;
+    }
+}
+
+$heap = new MaxHeap();
+$heap->insert(3);
+$heap->insert(1);
+$heap->insert(4);
+echo $heap->extract();  // 4 (maximum)
+
+// Priority queue
+$pq = new SplPriorityQueue();
+$pq->insert('low', 1);
+$pq->insert('high', 10);
+$pq->insert('medium', 5);
+echo $pq->extract();  // 'high'
+```
+
+Go's `container/heap` uses an interface-based approach:
+
+```go
+import "container/heap"
+
+// Implement heap.Interface
+type IntHeap []int
+
+func (h IntHeap) Len() int           { return len(h) }
+func (h IntHeap) Less(i, j int) bool { return h[i] > h[j] }  // Max heap
+func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *IntHeap) Push(x any) {
+    *h = append(*h, x.(int))
+}
+
+func (h *IntHeap) Pop() any {
+    old := *h
+    n := len(old)
+    x := old[n-1]
+    *h = old[0 : n-1]
+    return x
+}
+
+// Usage
+h := &IntHeap{3, 1, 4}
+heap.Init(h)
+heap.Push(h, 5)
+fmt.Println(heap.Pop(h))  // 5 (maximum)
+```
+
+For a priority queue:
+
+```go
+type Item struct {
+    value    string
+    priority int
+    index    int
+}
+
+type PriorityQueue []*Item
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+func (pq PriorityQueue) Less(i, j int) bool {
+    return pq[i].priority > pq[j].priority  // Higher priority first
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+    pq[i], pq[j] = pq[j], pq[i]
+    pq[i].index = i
+    pq[j].index = j
+}
+
+func (pq *PriorityQueue) Push(x any) {
+    n := len(*pq)
+    item := x.(*Item)
+    item.index = n
+    *pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() any {
+    old := *pq
+    n := len(old)
+    item := old[n-1]
+    old[n-1] = nil
+    item.index = -1
+    *pq = old[0 : n-1]
+    return item
+}
+
+// Usage
+pq := make(PriorityQueue, 0)
+heap.Push(&pq, &Item{value: "low", priority: 1})
+heap.Push(&pq, &Item{value: "high", priority: 10})
+item := heap.Pop(&pq).(*Item)
+fmt.Println(item.value)  // "high"
+```
+
+### SplFixedArray
+
+PHP's `SplFixedArray` provides a fixed-size array with better memory efficiency:
+
+```php
+$arr = new SplFixedArray(1000);
+$arr[0] = 'first';
+$arr[999] = 'last';
+// $arr[1000] = 'error';  // RuntimeException
+
+echo $arr->getSize();  // 1000
+$arr->setSize(500);    // Resize (truncates or extends)
+```
+
+Go arrays are fixed-size by design:
+
+```go
+// Size is part of the type
+var arr [1000]string
+arr[0] = "first"
+arr[999] = "last"
+// arr[1000] = "error"  // Compile error: index out of bounds
+
+// Array size is compile-time constant
+const size = 1000
+var arr2 [size]string
+
+// Cannot resize arrays - use slices for that
+slice := arr[:]       // Create slice from array
+slice = append(slice, "more")  // Now can grow
+```
+
+Key difference: Go arrays are value types (copied on assignment), while PHP's `SplFixedArray` uses reference semantics:
+
+```go
+arr1 := [3]int{1, 2, 3}
+arr2 := arr1        // Full copy!
+arr2[0] = 999
+fmt.Println(arr1[0])  // Still 1
+
+// For reference semantics, use pointer or slice
+slice1 := []int{1, 2, 3}
+slice2 := slice1    // Shares backing array
+slice2[0] = 999
+fmt.Println(slice1[0])  // 999
+```
+
+### SplObjectStorage
+
+PHP's `SplObjectStorage` uses objects as keys:
+
+```php
+$storage = new SplObjectStorage();
+
+$user1 = new User('Alice');
+$user2 = new User('Bob');
+
+$storage[$user1] = 'admin';
+$storage[$user2] = 'editor';
+
+echo $storage[$user1];  // 'admin'
+echo $storage->contains($user2);  // true
+```
+
+Go maps can use any comparable type as keys, including structs:
+
+```go
+type User struct {
+    ID   int
+    Name string
+}
+
+// Struct keys (compares all fields)
+roles := make(map[User]string)
+alice := User{ID: 1, Name: "Alice"}
+bob := User{ID: 2, Name: "Bob"}
+
+roles[alice] = "admin"
+roles[bob] = "editor"
+
+fmt.Println(roles[alice])  // "admin"
+
+_, exists := roles[bob]
+fmt.Println(exists)  // true
+```
+
+For pointer-based identity (like PHP's object identity):
+
+```go
+// Pointer keys (identity-based)
+type User struct {
+    ID   int
+    Name string
+}
+
+roles := make(map[*User]string)
+alice := &User{ID: 1, Name: "Alice"}
+bob := &User{ID: 2, Name: "Bob"}
+aliceCopy := &User{ID: 1, Name: "Alice"}  // Same values, different pointer
+
+roles[alice] = "admin"
+roles[bob] = "editor"
+
+fmt.Println(roles[alice])      // "admin"
+fmt.Println(roles[aliceCopy])  // "" (different pointer!)
+```
+
+### container/ring: Circular Buffers
+
+![Ring Buffer](../images/15-ring-buffer.png)
+
+Go provides `container/ring` with no PHP equivalent:
+
+```go
+import "container/ring"
+
+// Create ring of 5 elements
+r := ring.New(5)
+
+// Fill with values
+for i := 0; i < r.Len(); i++ {
+    r.Value = i
+    r = r.Next()
+}
+
+// Iterate (wraps around)
+r.Do(func(v any) {
+    fmt.Print(v, " ")  // 0 1 2 3 4
+})
+
+// Move forward/backward
+r = r.Next()  // Move to next
+r = r.Prev()  // Move to previous
+r = r.Move(3) // Move 3 positions
+```
+
+Use cases:
+- Circular buffers for streaming data
+- Round-robin scheduling
+- Rolling statistics (last N values)
+
+### Sets
+
+Neither PHP nor Go has a built-in set type. Both use maps:
+
+```php
+// PHP set using array
+$set = [];
+$set['apple'] = true;
+$set['banana'] = true;
+unset($set['apple']);
+$exists = isset($set['banana']);
+```
+
+```go
+// Go set using map
+set := make(map[string]struct{})  // struct{} uses zero bytes
+set["apple"] = struct{}{}
+set["banana"] = struct{}{}
+delete(set, "apple")
+_, exists := set["banana"]
+
+// Or with bool for readability
+set := make(map[string]bool)
+set["apple"] = true
+exists := set["banana"]  // false if not present
+```
+
+Generic set implementation:
+
+```go
+type Set[T comparable] map[T]struct{}
+
+func NewSet[T comparable]() Set[T] {
+    return make(Set[T])
+}
+
+func (s Set[T]) Add(item T) {
+    s[item] = struct{}{}
+}
+
+func (s Set[T]) Remove(item T) {
+    delete(s, item)
+}
+
+func (s Set[T]) Contains(item T) bool {
+    _, exists := s[item]
+    return exists
+}
+
+func (s Set[T]) Len() int {
+    return len(s)
+}
+
+// Set operations
+func (s Set[T]) Union(other Set[T]) Set[T] {
+    result := NewSet[T]()
+    for item := range s {
+        result.Add(item)
+    }
+    for item := range other {
+        result.Add(item)
+    }
+    return result
+}
+
+func (s Set[T]) Intersection(other Set[T]) Set[T] {
+    result := NewSet[T]()
+    for item := range s {
+        if other.Contains(item) {
+            result.Add(item)
+        }
+    }
+    return result
+}
+```
+
+### Memory Model Differences
+
+PHP uses reference counting with cycle detection:
+
+```php
+// PHP reference counting
+$a = ['data' => str_repeat('x', 1000000)];
+$b = $a;  // Copy-on-write: $a and $b share memory
+$b['data'] = 'modified';  // Now separate copies
+unset($a);  // Reference count drops, may free memory
+```
+
+Go uses a concurrent, tri-colour mark-and-sweep garbage collector:
+
+```go
+// Go garbage collection
+a := map[string]string{"data": strings.Repeat("x", 1000000)}
+b := a  // Both point to same map (maps are reference types)
+b["data"] = "modified"  // Modifies shared map!
+a = nil  // Map still reachable via b, not collected
+
+// Slices share backing arrays
+s1 := make([]int, 1000000)
+s2 := s1[500000:]  // s2 shares s1's backing array
+s1 = nil  // Backing array NOT collected (s2 still references it)
+```
+
+Key differences:
+
+| Aspect | PHP | Go |
+|--------|-----|-----|
+| GC type | Reference counting + cycle GC | Concurrent mark-and-sweep |
+| Pause times | Predictable (cycle GC can pause) | Sub-millisecond pauses |
+| Memory overhead | Per-object reference count | None per-object |
+| Value semantics | Copy-on-write | True copies for arrays/structs |
+| Reference semantics | Objects always | Maps, slices, channels, pointers |
+
+### Choosing the Right Structure
+
+| PHP SPL | Go Equivalent | When to Use |
+|---------|---------------|-------------|
+| `array` (list) | `[]T` (slice) | Ordered collections, stacks, queues |
+| `array` (map) | `map[K]V` | Key-value lookups |
+| `SplStack` | `[]T` with stack ops | LIFO access |
+| `SplQueue` | `[]T` with queue ops | FIFO access |
+| `SplDoublyLinkedList` | `container/list` | Frequent mid-list insertions |
+| `SplHeap` | `container/heap` | Priority-based extraction |
+| `SplPriorityQueue` | `container/heap` | Task scheduling |
+| `SplFixedArray` | `[N]T` (array) | Fixed-size, value semantics |
+| `SplObjectStorage` | `map[*T]V` | Object-keyed storage |
+| — | `container/ring` | Circular buffers |
+
 ## Symfony's Type-Hinted DI vs Go's Explicit Wiring
 
 Let's compare how type systems interact with dependency injection.
@@ -628,6 +1180,8 @@ This might seem like a step backward, but consider:
 - **Type inference** (`:=`) provides convenience without sacrificing safety
 - **Generics** solve different problems than PHP's union types
 - **Type assertions** replace `instanceof` but require more explicit handling
+- **Data structures**: PHP's SPL maps to Go's slices, maps, and `container/*` packages
+- **Memory model**: Go's concurrent GC differs from PHP's reference counting
 - **Explicit wiring** replaces type-driven dependency injection
 
 ---
@@ -649,3 +1203,17 @@ This might seem like a step backward, but consider:
 7. **Container Replacement**: Take a Symfony service with autowired dependencies. Write equivalent Go code with manual wiring. Measure lines of code versus clarity of dependency flow.
 
 8. **Type Safety Comparison**: Create a scenario where PHP's dynamic typing would allow a bug that Go's static typing prevents. Then create the opposite—a scenario where Go's strictness creates more verbose code for an obviously safe operation.
+
+9. **SPL Stack Migration**: Take PHP code using `SplStack` and convert it to Go using a generic `Stack[T]`. Add thread-safety using a mutex. Compare the APIs.
+
+10. **Priority Queue Implementation**: Implement a generic priority queue in Go using `container/heap`. Support custom priority functions. Compare to PHP's `SplPriorityQueue`.
+
+11. **Linked List vs Slice**: Write two versions of a function that processes a large list with frequent middle insertions—one using `container/list`, one using slices. Benchmark both. When does the linked list win?
+
+12. **Set Operations**: Implement a generic `Set[T]` in Go with `Union`, `Intersection`, `Difference`, and `SymmetricDifference`. Write tests with table-driven test cases.
+
+13. **Ring Buffer**: Use `container/ring` to implement a rolling average calculator that maintains the last N values. Compare memory usage to a slice-based approach.
+
+14. **Memory Behaviour**: Write Go code that demonstrates slice backing array sharing. Create a scenario where setting a slice element to `nil` doesn't free memory as expected. How would you fix it?
+
+15. **Object Storage Migration**: Convert PHP code using `SplObjectStorage` to Go. Use both struct keys (value equality) and pointer keys (identity equality). Document when each approach is appropriate.
