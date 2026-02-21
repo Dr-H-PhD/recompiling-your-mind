@@ -65,18 +65,23 @@
     - Middleware patterns
     - Routing
     - Request validation
+    - Gin and Echo frameworks
 
 11. **Database Access**
     - `database/sql` fundamentals
     - Query builders and ORMs
     - Migrations
     - Connection pooling
+    - NoSQL: MongoDB, Redis
+    - Data streaming: Kafka, Redis Streams
 
 12. **API Development**
     - JSON encoding/decoding
     - OpenAPI integration
     - Authentication middleware
     - Validation patterns
+    - gRPC and Protocol Buffers
+    - GraphQL with gqlgen
 
 13. **Testing—A Different Philosophy**
     - Table-driven tests
@@ -142,13 +147,16 @@
     - CLI tools
     - Signal handling
 
-## Part VI: Deployment and Migration
+## Part VI: Production Systems
 
 23. **Building and Deploying**
     - Single binary deployment
     - Cross-compilation
     - Docker multi-stage builds
     - Systemd services
+    - Kubernetes and Helm
+    - Service mesh with Istio
+    - GitOps with Argo CD
 
 24. **Observability**
     - Structured logging
@@ -161,6 +169,20 @@
     - Side-by-side execution
     - API gateway approaches
     - Case study
+
+26. **Security**
+    - OWASP Top 10 in Go
+    - Password hashing and encryption
+    - TLS configuration
+    - Secrets management
+    - CORS and security headers
+
+27. **Distributed Systems**
+    - CAP theorem
+    - Service discovery
+    - Circuit breakers
+    - Saga pattern
+    - Leader election
 
 ## Appendices
 
