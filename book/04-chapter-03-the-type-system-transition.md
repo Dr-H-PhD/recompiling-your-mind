@@ -276,6 +276,237 @@ type Identifier interface {
 func Process(id Identifier) User { ... }
 ```
 
+## Generics Deep Dive
+
+Before Go 1.18, writing reusable code often meant using `interface{}` and losing type safety:
+
+```go
+// Pre-generics: lose type safety
+func Contains(slice []interface{}, item interface{}) bool {
+    for _, v := range slice {
+        if v == item {
+            return true
+        }
+    }
+    return false
+}
+
+// Usage requires type assertions everywhere
+nums := []interface{}{1, 2, 3}
+found := Contains(nums, 2)
+```
+
+### Type Parameters
+
+Generics use square brackets to declare type parameters:
+
+```go
+// T is a type parameter
+func Contains[T comparable](slice []T, item T) bool {
+    for _, v := range slice {
+        if v == item {
+            return true
+        }
+    }
+    return false
+}
+
+// Usage: type-safe, no assertions needed
+nums := []int{1, 2, 3}
+found := Contains(nums, 2)  // T inferred as int
+
+names := []string{"alice", "bob"}
+found := Contains(names, "alice")  // T inferred as string
+```
+
+### Type Constraints
+
+Constraints specify what operations a type parameter must support:
+
+```go
+import "golang.org/x/exp/constraints"
+
+// Built-in constraint: comparable (supports == and !=)
+func IndexOf[T comparable](slice []T, item T) int {
+    for i, v := range slice {
+        if v == item {
+            return i
+        }
+    }
+    return -1
+}
+
+// Ordered constraint: supports < > <= >=
+func Max[T constraints.Ordered](a, b T) T {
+    if a > b {
+        return a
+    }
+    return b
+}
+
+// Custom constraint: define your own
+type Number interface {
+    ~int | ~int32 | ~int64 | ~float32 | ~float64
+}
+
+func Sum[T Number](numbers []T) T {
+    var total T
+    for _, n := range numbers {
+        total += n
+    }
+    return total
+}
+```
+
+The `~` prefix means "underlying type", allowing custom types:
+
+```go
+type Score int
+
+scores := []Score{10, 20, 30}
+total := Sum(scores)  // Works because Score's underlying type is int
+```
+
+### Generic Types
+
+Generics work with types, not just functions:
+
+```go
+// Generic stack
+type Stack[T any] struct {
+    items []T
+}
+
+func (s *Stack[T]) Push(item T) {
+    s.items = append(s.items, item)
+}
+
+func (s *Stack[T]) Pop() (T, bool) {
+    if len(s.items) == 0 {
+        var zero T
+        return zero, false
+    }
+    item := s.items[len(s.items)-1]
+    s.items = s.items[:len(s.items)-1]
+    return item, true
+}
+
+func (s *Stack[T]) Peek() (T, bool) {
+    if len(s.items) == 0 {
+        var zero T
+        return zero, false
+    }
+    return s.items[len(s.items)-1], true
+}
+
+// Usage
+intStack := Stack[int]{}
+intStack.Push(1)
+intStack.Push(2)
+val, _ := intStack.Pop()  // val is int, no assertion needed
+
+stringStack := Stack[string]{}
+stringStack.Push("hello")
+```
+
+### Generic Maps and Utility Functions
+
+```go
+// Map: apply function to each element
+func Map[T, R any](slice []T, fn func(T) R) []R {
+    result := make([]R, len(slice))
+    for i, v := range slice {
+        result[i] = fn(v)
+    }
+    return result
+}
+
+// Filter: keep elements matching predicate
+func Filter[T any](slice []T, fn func(T) bool) []T {
+    var result []T
+    for _, v := range slice {
+        if fn(v) {
+            result = append(result, v)
+        }
+    }
+    return result
+}
+
+// Reduce: fold slice to single value
+func Reduce[T, R any](slice []T, initial R, fn func(R, T) R) R {
+    result := initial
+    for _, v := range slice {
+        result = fn(result, v)
+    }
+    return result
+}
+
+// Usage
+nums := []int{1, 2, 3, 4, 5}
+
+doubled := Map(nums, func(n int) int { return n * 2 })
+// [2, 4, 6, 8, 10]
+
+evens := Filter(nums, func(n int) bool { return n%2 == 0 })
+// [2, 4]
+
+sum := Reduce(nums, 0, func(acc, n int) int { return acc + n })
+// 15
+```
+
+### Generics Best Practices
+
+**1. Use descriptive type parameter names for clarity:**
+
+```go
+// Less clear
+func Process[T, U any](input T) U { ... }
+
+// More clear
+func Transform[Input, Output any](input Input) Output { ... }
+```
+
+**2. Prefer interface constraints over `any` when possible:**
+
+```go
+// Too permissive
+func Sort[T any](slice []T) { ... }  // How do you compare T?
+
+// Properly constrained
+func Sort[T constraints.Ordered](slice []T) { ... }
+```
+
+**3. Don't overuse generics—concrete types are often clearer:**
+
+```go
+// Unnecessary generic
+func AddOne[T ~int](n T) T { return n + 1 }
+
+// Just use int
+func AddOne(n int) int { return n + 1 }
+```
+
+**4. Use generics for data structures and algorithms, not business logic:**
+
+```go
+// Good: generic data structure
+type Cache[K comparable, V any] struct { ... }
+
+// Questionable: generic business logic
+func ProcessOrder[T Order](order T) { ... }  // Just use Order interface
+```
+
+### Comparing to PHP
+
+| Feature | PHP | Go |
+|---------|-----|-----|
+| Type checking | Runtime | Compile time |
+| Union types | `int\|string` | Not supported (use interfaces) |
+| Generic functions | No (use mixed) | Yes, with type parameters |
+| Generic classes | No | Yes, generic types |
+| Type inference | Limited | Full inference from usage |
+| Constraints | None | Interface-based constraints |
+
 ## Type Assertions vs PHP's `instanceof`
 
 PHP's type checking is intuitive:
