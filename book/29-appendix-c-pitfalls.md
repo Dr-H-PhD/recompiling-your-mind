@@ -451,3 +451,409 @@ count := data["count"].(float64)
 ```
 
 **Why:** JSON numbers unmarshal to `float64` by default in Go.
+
+---
+
+## 21. Slice Capacity Surprises
+
+**Wrong:**
+```go
+a := []int{1, 2, 3, 4, 5}
+b := a[1:3]           // b = [2, 3], shares backing array
+b = append(b, 100)    // Overwrites a[3]!
+fmt.Println(a)        // [1 2 3 100 5]
+```
+
+**Right:**
+```go
+b := append([]int{}, a[1:3]...)  // Create independent copy
+// Or
+b := make([]int, 2)
+copy(b, a[1:3])
+```
+
+**Why:** Slices share underlying arrays until capacity forces reallocation.
+
+---
+
+## 22. Goroutine Leaks
+
+**Wrong:**
+```go
+func fetch(url string) <-chan string {
+    ch := make(chan string)
+    go func() {
+        resp, _ := http.Get(url)
+        body, _ := io.ReadAll(resp.Body)
+        ch <- string(body)  // Blocks forever if nobody receives!
+    }()
+    return ch
+}
+
+// If caller doesn't read: goroutine leaks
+```
+
+**Right:**
+```go
+func fetch(ctx context.Context, url string) <-chan string {
+    ch := make(chan string, 1)  // Buffered: won't block
+    go func() {
+        defer close(ch)
+        req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
+        resp, err := http.DefaultClient.Do(req)
+        if err != nil {
+            return
+        }
+        defer resp.Body.Close()
+        body, _ := io.ReadAll(resp.Body)
+        select {
+        case ch <- string(body):
+        case <-ctx.Done():
+        }
+    }()
+    return ch
+}
+```
+
+**Why:** Unbuffered channels block; always provide cancellation paths.
+
+---
+
+## 23. Nil Interface vs Nil Concrete Type
+
+**Surprise:**
+```go
+func getUser() *User {
+    return nil
+}
+
+func process(u interface{}) {
+    if u == nil {
+        fmt.Println("nil")
+    } else {
+        fmt.Println("not nil")  // This prints!
+    }
+}
+
+process(getUser())  // Prints "not nil"!
+```
+
+**Why:** An interface holding a nil pointer is not itself nil. The interface value is `(*User, nil)`, which is not equal to `nil`.
+
+**Right:**
+```go
+func process(u interface{}) {
+    if u == nil || reflect.ValueOf(u).IsNil() {
+        fmt.Println("nil")
+    }
+}
+// Or return interface from function:
+func getUser() interface{} {
+    return nil
+}
+```
+
+---
+
+## 24. Embedding Pointer vs Value
+
+**Subtle:**
+```go
+type Base struct {
+    Name string
+}
+
+type Derived struct {
+    Base  // Value embedding
+}
+
+type DerivedPtr struct {
+    *Base  // Pointer embedding - can be nil!
+}
+
+d := DerivedPtr{}
+fmt.Println(d.Name)  // Panic! Base is nil
+```
+
+**Why:** Pointer embedding can lead to nil panics; value embedding is safer.
+
+---
+
+## 25. Race Conditions in Tests
+
+**Wrong:**
+```go
+func TestConcurrent(t *testing.T) {
+    count := 0
+    var wg sync.WaitGroup
+
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            count++  // Race condition!
+        }()
+    }
+
+    wg.Wait()
+    if count != 100 {
+        t.Errorf("got %d, want 100", count)
+    }
+}
+```
+
+**Right:**
+```go
+func TestConcurrent(t *testing.T) {
+    var count atomic.Int64
+    var wg sync.WaitGroup
+
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            count.Add(1)  // Atomic operation
+        }()
+    }
+
+    wg.Wait()
+    if count.Load() != 100 {
+        t.Errorf("got %d, want 100", count.Load())
+    }
+}
+```
+
+**Why:** Always run tests with `-race` flag to detect races.
+
+---
+
+# Idiomatic Go Patterns
+
+## Writing Clean Go Code
+
+### 1. Accept Interfaces, Return Structs
+
+```go
+// Good: Accept interface
+func Process(r io.Reader) error {
+    // Works with files, HTTP bodies, strings, etc.
+}
+
+// Good: Return concrete type
+func NewService(db *sql.DB) *Service {
+    return &Service{db: db}
+}
+```
+
+### 2. Error Handling Patterns
+
+```go
+// Wrap errors with context
+if err != nil {
+    return fmt.Errorf("processing user %d: %w", userID, err)
+}
+
+// Sentinel errors for comparison
+var ErrNotFound = errors.New("not found")
+
+if errors.Is(err, ErrNotFound) {
+    // Handle not found
+}
+
+// Custom error types for data
+type ValidationError struct {
+    Field   string
+    Message string
+}
+
+func (e ValidationError) Error() string {
+    return fmt.Sprintf("%s: %s", e.Field, e.Message)
+}
+```
+
+### 3. Functional Options Pattern
+
+```go
+type Server struct {
+    host    string
+    port    int
+    timeout time.Duration
+}
+
+type Option func(*Server)
+
+func WithHost(host string) Option {
+    return func(s *Server) { s.host = host }
+}
+
+func WithPort(port int) Option {
+    return func(s *Server) { s.port = port }
+}
+
+func WithTimeout(d time.Duration) Option {
+    return func(s *Server) { s.timeout = d }
+}
+
+func NewServer(opts ...Option) *Server {
+    s := &Server{
+        host:    "localhost",
+        port:    8080,
+        timeout: 30 * time.Second,
+    }
+    for _, opt := range opts {
+        opt(s)
+    }
+    return s
+}
+
+// Usage
+server := NewServer(
+    WithHost("0.0.0.0"),
+    WithPort(3000),
+)
+```
+
+### 4. Table-Driven Tests
+
+```go
+func TestAdd(t *testing.T) {
+    tests := []struct {
+        name     string
+        a, b     int
+        expected int
+    }{
+        {"positives", 1, 2, 3},
+        {"negatives", -1, -2, -3},
+        {"mixed", -1, 2, 1},
+        {"zeros", 0, 0, 0},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := Add(tt.a, tt.b)
+            if got != tt.expected {
+                t.Errorf("Add(%d, %d) = %d, want %d",
+                    tt.a, tt.b, got, tt.expected)
+            }
+        })
+    }
+}
+```
+
+### 5. Constructor Pattern
+
+```go
+type User struct {
+    id    int64
+    name  string
+    email string
+}
+
+// NewUser validates and creates a User
+func NewUser(name, email string) (*User, error) {
+    if name == "" {
+        return nil, errors.New("name is required")
+    }
+    if !strings.Contains(email, "@") {
+        return nil, errors.New("invalid email")
+    }
+    return &User{
+        name:  name,
+        email: email,
+    }, nil
+}
+```
+
+## Performance Tips
+
+### 1. Pre-allocate Slices
+
+```go
+// Slow: grows multiple times
+var result []int
+for i := 0; i < n; i++ {
+    result = append(result, i)
+}
+
+// Fast: single allocation
+result := make([]int, 0, n)
+for i := 0; i < n; i++ {
+    result = append(result, i)
+}
+```
+
+### 2. Use strings.Builder
+
+```go
+// Slow: creates many intermediate strings
+var s string
+for i := 0; i < 1000; i++ {
+    s += fmt.Sprintf("%d,", i)
+}
+
+// Fast: efficient concatenation
+var b strings.Builder
+for i := 0; i < 1000; i++ {
+    fmt.Fprintf(&b, "%d,", i)
+}
+s := b.String()
+```
+
+### 3. Sync.Pool for Reusable Objects
+
+```go
+var bufferPool = sync.Pool{
+    New: func() interface{} {
+        return new(bytes.Buffer)
+    },
+}
+
+func process(data []byte) string {
+    buf := bufferPool.Get().(*bytes.Buffer)
+    defer func() {
+        buf.Reset()
+        bufferPool.Put(buf)
+    }()
+
+    // Use buffer...
+    return buf.String()
+}
+```
+
+### 4. Avoid Allocations in Hot Paths
+
+```go
+// Allocation per call
+func formatTime(t time.Time) string {
+    return t.Format("2006-01-02 15:04:05")
+}
+
+// Reuse format constant
+const timeFormat = "2006-01-02 15:04:05"
+
+func formatTime(t time.Time) string {
+    return t.Format(timeFormat)
+}
+```
+
+## Code Quality Tools
+
+```bash
+# Format code
+go fmt ./...
+
+# Vet for common mistakes
+go vet ./...
+
+# Run tests with race detector
+go test -race ./...
+
+# Check test coverage
+go test -cover ./...
+
+# Comprehensive linting
+golangci-lint run
+
+# Check for vulnerabilities
+govulncheck ./...
+```
