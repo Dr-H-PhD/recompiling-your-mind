@@ -399,6 +399,406 @@ func versionMiddleware(v1, v2 http.Handler) http.Handler {
 }
 ```
 
+## gRPC: High-Performance APIs
+
+PHP developers typically use REST. gRPC offers binary serialisation, code generation, and streaming—popular for microservices communication.
+
+### Why gRPC?
+
+| Feature | REST/JSON | gRPC |
+|---------|-----------|------|
+| Serialisation | JSON (text) | Protocol Buffers (binary) |
+| Contract | OpenAPI (optional) | .proto files (required) |
+| Streaming | Limited | Native bidirectional |
+| Code generation | Optional | Built-in |
+| Performance | Good | Excellent |
+| Browser support | Native | Via grpc-web |
+
+Use gRPC for service-to-service communication. Use REST for public APIs and browser clients.
+
+### Protocol Buffers
+
+Define your service contract in `.proto` files:
+
+```protobuf
+// user.proto
+syntax = "proto3";
+
+package user;
+
+option go_package = "myapp/pb";
+
+message User {
+    int64 id = 1;
+    string name = 2;
+    string email = 3;
+    google.protobuf.Timestamp created_at = 4;
+}
+
+message GetUserRequest {
+    int64 id = 1;
+}
+
+message CreateUserRequest {
+    string name = 1;
+    string email = 2;
+}
+
+message ListUsersRequest {
+    int32 page_size = 1;
+    string page_token = 2;
+}
+
+message ListUsersResponse {
+    repeated User users = 1;
+    string next_page_token = 2;
+}
+
+service UserService {
+    rpc GetUser(GetUserRequest) returns (User);
+    rpc CreateUser(CreateUserRequest) returns (User);
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+    rpc WatchUsers(ListUsersRequest) returns (stream User);  // Server streaming
+}
+```
+
+Generate Go code:
+
+```bash
+protoc --go_out=. --go-grpc_out=. user.proto
+```
+
+### Implementing a gRPC Server
+
+```go
+import (
+    "google.golang.org/grpc"
+    pb "myapp/pb"
+)
+
+type userServer struct {
+    pb.UnimplementedUserServiceServer
+    repo UserRepository
+}
+
+func (s *userServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.User, error) {
+    user, err := s.repo.Find(ctx, req.Id)
+    if err != nil {
+        return nil, status.Errorf(codes.NotFound, "user not found")
+    }
+    return toProtoUser(user), nil
+}
+
+func (s *userServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.User, error) {
+    user := &User{
+        Name:  req.Name,
+        Email: req.Email,
+    }
+
+    if err := s.repo.Create(ctx, user); err != nil {
+        return nil, status.Errorf(codes.Internal, "failed to create user")
+    }
+
+    return toProtoUser(user), nil
+}
+
+// Server streaming
+func (s *userServer) WatchUsers(req *pb.ListUsersRequest, stream pb.UserService_WatchUsersServer) error {
+    users, err := s.repo.List(stream.Context())
+    if err != nil {
+        return status.Errorf(codes.Internal, "failed to list users")
+    }
+
+    for _, user := range users {
+        if err := stream.Send(toProtoUser(user)); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func main() {
+    lis, _ := net.Listen("tcp", ":50051")
+    grpcServer := grpc.NewServer()
+    pb.RegisterUserServiceServer(grpcServer, &userServer{})
+    grpcServer.Serve(lis)
+}
+```
+
+### gRPC Client
+
+```go
+func main() {
+    conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
+
+    client := pb.NewUserServiceClient(conn)
+
+    // Unary call
+    user, err := client.GetUser(context.Background(), &pb.GetUserRequest{Id: 1})
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("User: %v\n", user)
+
+    // Streaming call
+    stream, err := client.WatchUsers(context.Background(), &pb.ListUsersRequest{})
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for {
+        user, err := stream.Recv()
+        if err == io.EOF {
+            break
+        }
+        if err != nil {
+            log.Fatal(err)
+        }
+        fmt.Printf("Received: %v\n", user)
+    }
+}
+```
+
+### gRPC Middleware (Interceptors)
+
+```go
+func loggingInterceptor(
+    ctx context.Context,
+    req interface{},
+    info *grpc.UnaryServerInfo,
+    handler grpc.UnaryHandler,
+) (interface{}, error) {
+    start := time.Now()
+    resp, err := handler(ctx, req)
+    log.Printf("method=%s duration=%v err=%v", info.FullMethod, time.Since(start), err)
+    return resp, err
+}
+
+func authInterceptor(
+    ctx context.Context,
+    req interface{},
+    info *grpc.UnaryServerInfo,
+    handler grpc.UnaryHandler,
+) (interface{}, error) {
+    md, ok := metadata.FromIncomingContext(ctx)
+    if !ok {
+        return nil, status.Errorf(codes.Unauthenticated, "missing metadata")
+    }
+
+    tokens := md.Get("authorization")
+    if len(tokens) == 0 {
+        return nil, status.Errorf(codes.Unauthenticated, "missing token")
+    }
+
+    // Validate token...
+    return handler(ctx, req)
+}
+
+// Apply interceptors
+server := grpc.NewServer(
+    grpc.ChainUnaryInterceptor(loggingInterceptor, authInterceptor),
+)
+```
+
+## GraphQL: Flexible Queries
+
+GraphQL lets clients request exactly the data they need—no over-fetching or under-fetching. PHP has webonyx/graphql-php or API Platform's GraphQL support.
+
+### Why GraphQL?
+
+| Use Case | Best Choice |
+|----------|-------------|
+| Fixed data requirements | REST |
+| Variable data requirements | GraphQL |
+| Simple CRUD | REST |
+| Complex nested data | GraphQL |
+| Microservices internal | gRPC |
+| Mobile apps (bandwidth) | GraphQL |
+
+### gqlgen: Go's GraphQL Library
+
+gqlgen generates type-safe Go code from your GraphQL schema.
+
+Define your schema:
+
+```graphql
+# schema.graphql
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    posts: [Post!]!
+    createdAt: Time!
+}
+
+type Post {
+    id: ID!
+    title: String!
+    content: String!
+    author: User!
+}
+
+type Query {
+    user(id: ID!): User
+    users(limit: Int = 10, offset: Int = 0): [User!]!
+    post(id: ID!): Post
+}
+
+type Mutation {
+    createUser(input: CreateUserInput!): User!
+    updateUser(id: ID!, input: UpdateUserInput!): User!
+    deleteUser(id: ID!): Boolean!
+}
+
+input CreateUserInput {
+    name: String!
+    email: String!
+}
+
+input UpdateUserInput {
+    name: String
+    email: String
+}
+
+scalar Time
+```
+
+Generate code:
+
+```bash
+go run github.com/99designs/gqlgen generate
+```
+
+### Implementing Resolvers
+
+```go
+type Resolver struct {
+    userRepo UserRepository
+    postRepo PostRepository
+}
+
+// Query resolvers
+func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
+    return r.userRepo.FindByID(ctx, id)
+}
+
+func (r *queryResolver) Users(ctx context.Context, limit *int, offset *int) ([]*model.User, error) {
+    l, o := 10, 0
+    if limit != nil {
+        l = *limit
+    }
+    if offset != nil {
+        o = *offset
+    }
+    return r.userRepo.List(ctx, l, o)
+}
+
+// Mutation resolvers
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.User, error) {
+    user := &model.User{
+        Name:  input.Name,
+        Email: input.Email,
+    }
+    if err := r.userRepo.Create(ctx, user); err != nil {
+        return nil, err
+    }
+    return user, nil
+}
+
+// Field resolvers (N+1 prevention with dataloaders)
+func (r *userResolver) Posts(ctx context.Context, obj *model.User) ([]*model.Post, error) {
+    return r.postRepo.FindByAuthorID(ctx, obj.ID)
+}
+```
+
+### DataLoaders for N+1 Prevention
+
+GraphQL's nested queries can cause N+1 problems. DataLoaders batch requests:
+
+```go
+import "github.com/graph-gophers/dataloader/v7"
+
+type Loaders struct {
+    PostsByAuthor *dataloader.Loader[string, []*model.Post]
+}
+
+func NewLoaders(postRepo PostRepository) *Loaders {
+    return &Loaders{
+        PostsByAuthor: dataloader.NewBatchedLoader(func(ctx context.Context, authorIDs []string) []*dataloader.Result[[]*model.Post] {
+            // Batch fetch all posts for all authors at once
+            postsByAuthor, err := postRepo.FindByAuthorIDs(ctx, authorIDs)
+
+            results := make([]*dataloader.Result[[]*model.Post], len(authorIDs))
+            for i, id := range authorIDs {
+                if err != nil {
+                    results[i] = &dataloader.Result[[]*model.Post]{Error: err}
+                } else {
+                    results[i] = &dataloader.Result[[]*model.Post]{Data: postsByAuthor[id]}
+                }
+            }
+            return results
+        }),
+    }
+}
+
+// Use in resolver
+func (r *userResolver) Posts(ctx context.Context, obj *model.User) ([]*model.Post, error) {
+    loaders := ctx.Value(loadersKey).(*Loaders)
+    return loaders.PostsByAuthor.Load(ctx, obj.ID)()
+}
+```
+
+### GraphQL Middleware
+
+```go
+func main() {
+    srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
+        Resolvers: &Resolver{},
+    }))
+
+    // Add complexity limit
+    srv.Use(extension.FixedComplexityLimit(100))
+
+    // Add logging
+    srv.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+        op := graphql.GetOperationContext(ctx)
+        log.Printf("GraphQL operation: %s", op.OperationName)
+        return next(ctx)
+    })
+
+    // Add authentication
+    srv.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+        user := auth.UserFromContext(ctx)
+        if user == nil {
+            return graphql.ErrorResponse(ctx, "unauthorized")
+        }
+        return next(ctx)
+    })
+
+    http.Handle("/graphql", srv)
+    http.Handle("/playground", playground.Handler("GraphQL", "/graphql"))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### Choosing Between REST, gRPC, and GraphQL
+
+| Criterion | REST | gRPC | GraphQL |
+|-----------|------|------|---------|
+| Client control over data | Low | Low | High |
+| Performance | Good | Excellent | Good |
+| Learning curve | Low | Medium | Medium |
+| Tooling maturity | Excellent | Good | Good |
+| Browser support | Native | Limited | Native |
+| Caching | Easy (HTTP) | Manual | Complex |
+| Best for | Public APIs | Microservices | Mobile/frontend |
+
+For PHP developers: REST is familiar territory. Use gRPC for internal services where performance matters. Use GraphQL when clients need flexible data fetching.
+
 ## Summary
 
 - **JSON encoding** uses struct tags for field mapping
@@ -408,6 +808,9 @@ func versionMiddleware(v1, v2 http.Handler) http.Handler {
 - **Validation** uses `go-playground/validator` with struct tags
 - **Error responses** follow consistent structure
 - **Versioning** is implemented manually (URL or header)
+- **gRPC** provides high-performance binary communication with streaming
+- **GraphQL** enables flexible queries with client-controlled data fetching
+- **Choose REST** for public APIs, **gRPC** for internal services, **GraphQL** for complex frontends
 
 ---
 
@@ -428,3 +831,11 @@ func versionMiddleware(v1, v2 http.Handler) http.Handler {
 7. **Request ID Tracing**: Add request ID middleware. Include the ID in logs and error responses.
 
 8. **API Versioning**: Implement URL-based versioning with two API versions that differ in response format.
+
+9. **gRPC Service**: Define a proto file for a simple service. Generate code and implement server and client.
+
+10. **gRPC Streaming**: Add a server-streaming endpoint to your gRPC service. Test with a client that processes the stream.
+
+11. **GraphQL API**: Set up gqlgen for a simple schema. Implement query and mutation resolvers.
+
+12. **DataLoader Implementation**: Add dataloaders to prevent N+1 queries in nested GraphQL resolvers.
