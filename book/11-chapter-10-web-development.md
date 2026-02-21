@@ -740,6 +740,359 @@ func echoCreateUser(svc *UserService) echo.HandlerFunc {
 
 This is the Go equivalent of Symfony's hexagonal architecture—your domain logic stays clean.
 
+## WebSockets: Real-Time Communication
+
+PHP's traditional request-response model struggles with real-time features. Solutions like Ratchet or Swoole exist, but they require separate processes. Go handles WebSockets naturally with goroutines.
+
+### Why WebSockets in Go?
+
+- **Native concurrency**: Each connection runs in its own goroutine
+- **Low overhead**: Thousands of connections with minimal memory
+- **Same binary**: No separate WebSocket server process
+- **Standard patterns**: Channels for message distribution
+
+### Using gorilla/websocket
+
+```go
+import "github.com/gorilla/websocket"
+
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool {
+        // Allow all origins in development
+        return true
+    },
+}
+
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Printf("upgrade error: %v", err)
+        return
+    }
+    defer conn.Close()
+
+    for {
+        messageType, message, err := conn.ReadMessage()
+        if err != nil {
+            if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+                log.Printf("read error: %v", err)
+            }
+            break
+        }
+
+        // Echo message back
+        if err := conn.WriteMessage(messageType, message); err != nil {
+            log.Printf("write error: %v", err)
+            break
+        }
+    }
+}
+
+func main() {
+    http.HandleFunc("/ws", handleWebSocket)
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+```
+
+### Chat Room Pattern
+
+A practical example: broadcast messages to all connected clients.
+
+```go
+type Client struct {
+    conn *websocket.Conn
+    send chan []byte
+}
+
+type Hub struct {
+    clients    map[*Client]bool
+    broadcast  chan []byte
+    register   chan *Client
+    unregister chan *Client
+    mu         sync.RWMutex
+}
+
+func NewHub() *Hub {
+    return &Hub{
+        clients:    make(map[*Client]bool),
+        broadcast:  make(chan []byte),
+        register:   make(chan *Client),
+        unregister: make(chan *Client),
+    }
+}
+
+func (h *Hub) Run() {
+    for {
+        select {
+        case client := <-h.register:
+            h.mu.Lock()
+            h.clients[client] = true
+            h.mu.Unlock()
+
+        case client := <-h.unregister:
+            h.mu.Lock()
+            if _, ok := h.clients[client]; ok {
+                delete(h.clients, client)
+                close(client.send)
+            }
+            h.mu.Unlock()
+
+        case message := <-h.broadcast:
+            h.mu.RLock()
+            for client := range h.clients {
+                select {
+                case client.send <- message:
+                default:
+                    close(client.send)
+                    delete(h.clients, client)
+                }
+            }
+            h.mu.RUnlock()
+        }
+    }
+}
+
+func (c *Client) readPump(hub *Hub) {
+    defer func() {
+        hub.unregister <- c
+        c.conn.Close()
+    }()
+
+    for {
+        _, message, err := c.conn.ReadMessage()
+        if err != nil {
+            break
+        }
+        hub.broadcast <- message
+    }
+}
+
+func (c *Client) writePump() {
+    defer c.conn.Close()
+
+    for message := range c.send {
+        if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+            break
+        }
+    }
+}
+
+func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        return
+    }
+
+    client := &Client{
+        conn: conn,
+        send: make(chan []byte, 256),
+    }
+
+    hub.register <- client
+
+    go client.writePump()
+    go client.readPump(hub)
+}
+```
+
+### Structured Messages
+
+```go
+type Message struct {
+    Type    string          `json:"type"`
+    Payload json.RawMessage `json:"payload"`
+}
+
+type ChatMessage struct {
+    User    string `json:"user"`
+    Content string `json:"content"`
+    Time    int64  `json:"time"`
+}
+
+func (c *Client) handleMessage(data []byte) {
+    var msg Message
+    if err := json.Unmarshal(data, &msg); err != nil {
+        return
+    }
+
+    switch msg.Type {
+    case "chat":
+        var chat ChatMessage
+        json.Unmarshal(msg.Payload, &chat)
+        c.handleChat(chat)
+
+    case "typing":
+        c.handleTyping()
+
+    case "ping":
+        c.sendPong()
+    }
+}
+
+func (c *Client) sendJSON(v interface{}) error {
+    return c.conn.WriteJSON(v)
+}
+```
+
+### Connection Management
+
+```go
+type Client struct {
+    id       string
+    conn     *websocket.Conn
+    send     chan []byte
+    hub      *Hub
+    lastPing time.Time
+}
+
+func (c *Client) readPump() {
+    defer func() {
+        c.hub.unregister <- c
+        c.conn.Close()
+    }()
+
+    c.conn.SetReadLimit(512 * 1024)  // 512KB max message
+    c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    c.conn.SetPongHandler(func(string) error {
+        c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+        c.lastPing = time.Now()
+        return nil
+    })
+
+    for {
+        _, message, err := c.conn.ReadMessage()
+        if err != nil {
+            break
+        }
+        c.handleMessage(message)
+    }
+}
+
+func (c *Client) writePump() {
+    ticker := time.NewTicker(30 * time.Second)
+    defer func() {
+        ticker.Stop()
+        c.conn.Close()
+    }()
+
+    for {
+        select {
+        case message, ok := <-c.send:
+            c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+            if !ok {
+                c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+                return
+            }
+            if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+                return
+            }
+
+        case <-ticker.C:
+            c.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+            if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+                return
+            }
+        }
+    }
+}
+```
+
+### Client-Side JavaScript
+
+```javascript
+class WebSocketClient {
+    constructor(url) {
+        this.url = url;
+        this.reconnectDelay = 1000;
+        this.connect();
+    }
+
+    connect() {
+        this.ws = new WebSocket(this.url);
+
+        this.ws.onopen = () => {
+            console.log('Connected');
+            this.reconnectDelay = 1000;
+        };
+
+        this.ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            this.handleMessage(msg);
+        };
+
+        this.ws.onclose = () => {
+            console.log('Disconnected, reconnecting...');
+            setTimeout(() => this.connect(), this.reconnectDelay);
+            this.reconnectDelay = Math.min(this.reconnectDelay * 2, 30000);
+        };
+    }
+
+    send(type, payload) {
+        if (this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type, payload }));
+        }
+    }
+
+    handleMessage(msg) {
+        switch (msg.type) {
+            case 'chat':
+                this.onChat(msg.payload);
+                break;
+            case 'users':
+                this.onUsers(msg.payload);
+                break;
+        }
+    }
+}
+
+const client = new WebSocketClient('ws://localhost:8080/ws');
+client.onChat = (msg) => console.log(`${msg.user}: ${msg.content}`);
+```
+
+### Scaling WebSockets
+
+For multiple server instances, use Redis pub/sub:
+
+```go
+import "github.com/go-redis/redis/v8"
+
+type DistributedHub struct {
+    *Hub
+    redis   *redis.Client
+    channel string
+}
+
+func (h *DistributedHub) Run() {
+    // Subscribe to Redis channel
+    pubsub := h.redis.Subscribe(context.Background(), h.channel)
+    defer pubsub.Close()
+
+    go func() {
+        for msg := range pubsub.Channel() {
+            // Broadcast to local clients
+            h.broadcastLocal([]byte(msg.Payload))
+        }
+    }()
+
+    // Handle local events
+    for {
+        select {
+        case client := <-h.register:
+            h.addClient(client)
+
+        case client := <-h.unregister:
+            h.removeClient(client)
+
+        case message := <-h.broadcast:
+            // Publish to Redis (all instances receive it)
+            h.redis.Publish(context.Background(), h.channel, message)
+        }
+    }
+}
+```
+
 ## Summary
 
 - **Handlers** are functions or structs implementing `http.Handler`
@@ -749,6 +1102,8 @@ This is the Go equivalent of Symfony's hexagonal architecture—your domain logi
 - **Response helpers** provide consistent JSON responses
 - **Sessions** use libraries like `gorilla/sessions` or JWT
 - **Gin/Echo** provide Symfony-like convenience when needed
+- **WebSockets** enable real-time communication with gorilla/websocket
+- **Hub pattern** manages broadcasting to multiple clients
 
 ---
 
@@ -769,3 +1124,11 @@ This is the Go equivalent of Symfony's hexagonal architecture—your domain logi
 7. **Error Handling**: Design an error type that carries HTTP status codes. Use it throughout handlers.
 
 8. **Graceful Shutdown**: Implement graceful shutdown that waits for active requests to complete.
+
+9. **WebSocket Echo**: Build a WebSocket echo server that returns messages to the sender.
+
+10. **Chat Room**: Implement a multi-user chat room with user join/leave notifications.
+
+11. **Presence System**: Add "user is typing" indicators to the chat room using WebSocket messages.
+
+12. **Reconnection**: Implement client-side reconnection with exponential backoff.
