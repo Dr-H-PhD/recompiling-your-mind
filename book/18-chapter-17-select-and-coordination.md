@@ -47,6 +47,10 @@ for {
 
 This is the foundation for event loops in Go.
 
+## Context Propagation
+
+![Context Propagation](../images/08-context-propagation.png)
+
 ## Timeouts and Deadlines
 
 PHP might use cURL timeouts:

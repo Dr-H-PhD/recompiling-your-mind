@@ -4,6 +4,8 @@ If you've been using PHP for years, inheritance is deeply wired into your thinki
 
 Go has no inheritance. None. This isn't a limitation to work around; it's a deliberate design choice that leads to better code.
 
+![Composition vs Inheritance](../images/09-composition-vs-inheritance.png)
+
 ## Why Go Has No Inheritance
 
 Inheritance creates several problems at scale:

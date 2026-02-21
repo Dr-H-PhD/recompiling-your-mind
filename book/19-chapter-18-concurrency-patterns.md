@@ -2,6 +2,8 @@
 
 Armed with goroutines, channels, select, and context, you can implement powerful concurrency patterns. These patterns solve common problems elegantly.
 
+![Worker Pool Pattern](../images/07-worker-pool-pattern.png)
+
 ## Worker Pools
 
 Process items in parallel with a fixed number of workers:

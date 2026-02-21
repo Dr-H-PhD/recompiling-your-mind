@@ -2,6 +2,8 @@
 
 Migrating from PHP to Go isn't typically a big-bang rewrite. This chapter covers practical strategies for gradual migration, drawing on patterns used successfully in production.
 
+![Strangler Fig Migration Pattern](../images/06-strangler-fig-migration.png)
+
 ## Strangler Fig Pattern
 
 The strangler fig tree grows around its host, eventually replacing it. Apply this to your PHP application:

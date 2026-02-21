@@ -2,6 +2,8 @@
 
 PHP interfaces are explicit contracts. You declare `implements`, and the class must provide all methods. Go interfaces work differently—and this difference is profound.
 
+![Interface Satisfaction: PHP vs Go](../images/05-interface-satisfaction.png)
+
 ## Implicit Satisfaction (No `implements`)
 
 In PHP, the relationship is declared:

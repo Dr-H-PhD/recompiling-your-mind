@@ -2,6 +2,8 @@
 
 PHP's Composer revolutionised dependency management. Go's module system takes a different approach—simpler in some ways, stricter in others. Understanding these differences is key to structuring Go projects effectively.
 
+![Package Structure: PHP vs Go](../images/10-package-structure.png)
+
 ## No Autoloading: Explicit Imports
 
 PHP's autoloading is magical:

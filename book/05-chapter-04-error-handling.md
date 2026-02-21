@@ -4,6 +4,8 @@ If there's one aspect of Go that drives PHP developers crazy, it's error handlin
 
 But error handling is where Go's philosophy shines most clearly. Once you internalise it, you'll understand why many Go developers consider it superior to exceptions.
 
+![Error Handling Flow: PHP vs Go](../images/04-error-handling-flow.png)
+
 ## Why `if err != nil` Feels Wrong at First
 
 Your PHP brain has been trained to expect exceptions:

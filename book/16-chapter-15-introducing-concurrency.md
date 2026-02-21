@@ -97,6 +97,10 @@ go fetchOrderHistory(id)  // Starts immediately, doesn't block
 
 The `go` keyword starts a goroutine. The function runs concurrently with the caller.
 
+### Goroutine Lifecycle
+
+![Goroutine Lifecycle](../images/02-goroutine-lifecycle.png)
+
 ### Waiting for Goroutines
 
 ```go
@@ -161,6 +165,8 @@ The scheduler handles:
 - Context switching
 
 ## Why PHP-FPM's Model Is Fundamentally Different
+
+![PHP-FPM vs Go Architecture](../images/01-php-fpm-vs-go.png)
 
 PHP-FPM scales by adding workers:
 

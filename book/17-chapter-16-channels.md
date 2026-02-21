@@ -2,6 +2,8 @@
 
 Goroutines run concurrently, but how do they communicate? Go's answer is channels—typed conduits for passing data between goroutines.
 
+![Channel Communication Patterns](../images/03-channel-patterns.png)
+
 ## Channels: Typed Message Passing
 
 The philosophy: "Don't communicate by sharing memory; share memory by communicating."
