@@ -20,6 +20,8 @@
    - Generics and union types
    - Type assertions
    - Generics deep dive: constraints and patterns
+   - Data structures: PHP/SPL vs Go
+   - Memory model differences
 
 4. **Error Handling—The Hardest Shift**
    - Why `if err != nil` feels wrong
