@@ -421,6 +421,315 @@ func main() {
 }
 ```
 
+## HTTP Clients: Calling External APIs
+
+PHP developers rely heavily on HTTP clients—Guzzle, Symfony HttpClient, or even `file_get_contents()`. Go's `net/http` package provides a powerful client that outperforms most PHP alternatives.
+
+### PHP vs Go: Quick Comparison
+
+```php
+// Guzzle
+$client = new GuzzleHttp\Client(['timeout' => 10]);
+$response = $client->get('https://api.example.com/users');
+$data = json_decode($response->getBody(), true);
+
+// Symfony HttpClient
+$client = HttpClient::create(['timeout' => 10]);
+$response = $client->request('GET', 'https://api.example.com/users');
+$data = $response->toArray();
+```
+
+```go
+// Go standard library
+resp, err := http.Get("https://api.example.com/users")
+if err != nil {
+    return err
+}
+defer resp.Body.Close()
+
+var data []User
+json.NewDecoder(resp.Body).Decode(&data)
+```
+
+### Basic Requests
+
+```go
+// GET request
+resp, err := http.Get("https://api.example.com/users")
+if err != nil {
+    return fmt.Errorf("request failed: %w", err)
+}
+defer resp.Body.Close()
+
+if resp.StatusCode != http.StatusOK {
+    return fmt.Errorf("unexpected status: %d", resp.StatusCode)
+}
+
+body, err := io.ReadAll(resp.Body)
+
+// POST with JSON
+data := map[string]string{"name": "John", "email": "john@example.com"}
+jsonBody, _ := json.Marshal(data)
+
+resp, err := http.Post(
+    "https://api.example.com/users",
+    "application/json",
+    bytes.NewReader(jsonBody),
+)
+```
+
+### Custom HTTP Client
+
+The default `http.DefaultClient` has no timeout—dangerous for production. Always create a custom client:
+
+```go
+client := &http.Client{
+    Timeout: 10 * time.Second,
+}
+
+resp, err := client.Get("https://api.example.com/users")
+```
+
+### Transport Configuration
+
+For high-performance applications, configure the transport layer:
+
+```go
+transport := &http.Transport{
+    // Connection pooling
+    MaxIdleConns:        100,
+    MaxIdleConnsPerHost: 10,
+    IdleConnTimeout:     90 * time.Second,
+
+    // Timeouts
+    DialContext: (&net.Dialer{
+        Timeout:   5 * time.Second,   // Connection timeout
+        KeepAlive: 30 * time.Second,  // Keep-alive interval
+    }).DialContext,
+    TLSHandshakeTimeout:   5 * time.Second,
+    ExpectContinueTimeout: 1 * time.Second,
+    ResponseHeaderTimeout: 10 * time.Second,
+}
+
+client := &http.Client{
+    Transport: transport,
+    Timeout:   30 * time.Second,  // Total request timeout
+}
+```
+
+**Key differences from PHP:**
+- **Connection pooling is automatic**: Go reuses TCP connections
+- **Thread-safe**: One client instance for all goroutines
+- **No external dependencies**: Built into the standard library
+
+### Making Complex Requests
+
+For headers, authentication, or custom methods, use `http.NewRequest`:
+
+```go
+func callAPI(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
+    req, err := http.NewRequestWithContext(ctx, method, url, body)
+    if err != nil {
+        return nil, err
+    }
+
+    // Headers
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Authorization", "Bearer "+token)
+    req.Header.Set("User-Agent", "MyApp/1.0")
+
+    // Custom client (reuse this!)
+    return client.Do(req)
+}
+
+// Usage
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+resp, err := callAPI(ctx, "PUT", "https://api.example.com/users/123", bytes.NewReader(jsonBody))
+```
+
+### JSON API Client Pattern
+
+Create a reusable API client—similar to how you'd wrap Guzzle:
+
+```go
+type APIClient struct {
+    baseURL    string
+    httpClient *http.Client
+    apiKey     string
+}
+
+func NewAPIClient(baseURL, apiKey string) *APIClient {
+    return &APIClient{
+        baseURL: baseURL,
+        apiKey:  apiKey,
+        httpClient: &http.Client{
+            Timeout: 10 * time.Second,
+        },
+    }
+}
+
+func (c *APIClient) do(ctx context.Context, method, path string, body, result any) error {
+    var bodyReader io.Reader
+    if body != nil {
+        jsonBody, err := json.Marshal(body)
+        if err != nil {
+            return err
+        }
+        bodyReader = bytes.NewReader(jsonBody)
+    }
+
+    req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, bodyReader)
+    if err != nil {
+        return err
+    }
+
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("X-API-Key", c.apiKey)
+
+    resp, err := c.httpClient.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode >= 400 {
+        body, _ := io.ReadAll(resp.Body)
+        return fmt.Errorf("API error %d: %s", resp.StatusCode, body)
+    }
+
+    if result != nil {
+        return json.NewDecoder(resp.Body).Decode(result)
+    }
+    return nil
+}
+
+func (c *APIClient) GetUser(ctx context.Context, id string) (*User, error) {
+    var user User
+    err := c.do(ctx, "GET", "/users/"+id, nil, &user)
+    return &user, err
+}
+
+func (c *APIClient) CreateUser(ctx context.Context, input CreateUserInput) (*User, error) {
+    var user User
+    err := c.do(ctx, "POST", "/users", input, &user)
+    return &user, err
+}
+```
+
+### Concurrent Requests
+
+Go excels at making parallel requests—something PHP struggles with:
+
+```go
+func fetchAllUsers(ctx context.Context, ids []string) ([]*User, error) {
+    users := make([]*User, len(ids))
+    errors := make([]error, len(ids))
+
+    var wg sync.WaitGroup
+    for i, id := range ids {
+        wg.Add(1)
+        go func(idx int, userID string) {
+            defer wg.Done()
+            users[idx], errors[idx] = apiClient.GetUser(ctx, userID)
+        }(i, id)
+    }
+    wg.Wait()
+
+    // Check for errors
+    for _, err := range errors {
+        if err != nil {
+            return nil, err
+        }
+    }
+    return users, nil
+}
+```
+
+### Rate Limiting
+
+Respect API rate limits with a semaphore:
+
+```go
+func fetchWithRateLimit(ctx context.Context, urls []string, maxConcurrent int) ([][]byte, error) {
+    results := make([][]byte, len(urls))
+    sem := make(chan struct{}, maxConcurrent)
+
+    var wg sync.WaitGroup
+    var mu sync.Mutex
+    var firstErr error
+
+    for i, url := range urls {
+        wg.Add(1)
+        go func(idx int, u string) {
+            defer wg.Done()
+
+            sem <- struct{}{}        // Acquire
+            defer func() { <-sem }() // Release
+
+            resp, err := http.Get(u)
+            if err != nil {
+                mu.Lock()
+                if firstErr == nil {
+                    firstErr = err
+                }
+                mu.Unlock()
+                return
+            }
+            defer resp.Body.Close()
+
+            body, _ := io.ReadAll(resp.Body)
+            results[idx] = body
+        }(i, url)
+    }
+
+    wg.Wait()
+    return results, firstErr
+}
+```
+
+### Retry with Backoff
+
+```go
+func fetchWithRetry(ctx context.Context, url string, maxRetries int) (*http.Response, error) {
+    var lastErr error
+
+    for attempt := 0; attempt <= maxRetries; attempt++ {
+        req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
+        resp, err := client.Do(req)
+
+        if err == nil && resp.StatusCode < 500 {
+            return resp, nil
+        }
+
+        if resp != nil {
+            resp.Body.Close()
+        }
+        lastErr = err
+
+        // Exponential backoff
+        backoff := time.Duration(1<<attempt) * 100 * time.Millisecond
+        select {
+        case <-time.After(backoff):
+        case <-ctx.Done():
+            return nil, ctx.Err()
+        }
+    }
+
+    return nil, fmt.Errorf("max retries exceeded: %w", lastErr)
+}
+```
+
+### Best Practices
+
+1. **Reuse `http.Client`**: Create once, use everywhere—connections are pooled
+2. **Always set timeouts**: The default client has none
+3. **Always close `resp.Body`**: Use `defer resp.Body.Close()`
+4. **Use context for cancellation**: Pass `ctx` through your call chain
+5. **Check status codes**: Success doesn't guarantee 2xx
+6. **Handle connection errors**: Networks fail; retry when appropriate
+
 ## When You Need a Framework: Gin and Echo
 
 So far we've used only the standard library. But sometimes you want more structure—especially coming from Symfony. Go has excellent web frameworks that feel familiar.
@@ -1101,6 +1410,8 @@ func (h *DistributedHub) Run() {
 - **Validation** uses struct tags or manual validation
 - **Response helpers** provide consistent JSON responses
 - **Sessions** use libraries like `gorilla/sessions` or JWT
+- **HTTP clients** use `http.Client` with custom transport for connection pooling
+- **Concurrent requests** leverage goroutines for parallel API calls
 - **Gin/Echo** provide Symfony-like convenience when needed
 - **WebSockets** enable real-time communication with gorilla/websocket
 - **Hub pattern** manages broadcasting to multiple clients
@@ -1132,3 +1443,11 @@ func (h *DistributedHub) Run() {
 11. **Presence System**: Add "user is typing" indicators to the chat room using WebSocket messages.
 
 12. **Reconnection**: Implement client-side reconnection with exponential backoff.
+
+13. **API Client**: Build a reusable HTTP client for a public API (e.g., GitHub, JSONPlaceholder). Include proper error handling.
+
+14. **Concurrent Fetcher**: Fetch data from multiple URLs concurrently with a configurable concurrency limit.
+
+15. **Retry Middleware**: Create HTTP client middleware that retries failed requests with exponential backoff.
+
+16. **Request Logging**: Build an `http.RoundTripper` that logs all outgoing requests and responses.

@@ -66,6 +66,7 @@
     - Middleware patterns
     - Routing
     - Request validation
+    - HTTP clients and external APIs
     - Gin and Echo frameworks
     - WebSockets and real-time communication
 
