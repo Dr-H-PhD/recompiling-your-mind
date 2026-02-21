@@ -19,6 +19,7 @@
    - Type inference as compromise
    - Generics and union types
    - Type assertions
+   - Generics deep dive: constraints and patterns
 
 4. **Error Handling—The Hardest Shift**
    - Why `if err != nil` feels wrong
@@ -66,6 +67,7 @@
     - Routing
     - Request validation
     - Gin and Echo frameworks
+    - WebSockets and real-time communication
 
 11. **Database Access**
     - `database/sql` fundamentals
@@ -184,10 +186,24 @@
     - Saga pattern
     - Leader election
 
+28. **Building CLI Tools**
+    - The flag package
+    - Subcommands and argument parsing
+    - User input and output
+    - Progress bars and colours
+    - Testing CLI applications
+
+29. **File I/O**
+    - io.Reader and io.Writer interfaces
+    - Buffered I/O with bufio
+    - Working with paths
+    - JSON and CSV processing
+    - Concurrent file processing
+
 ## Appendices
 
 A. **PHP-to-Go Phrasebook**
 B. **Standard Library Essentials**
-C. **Common Pitfalls**
+C. **Common Pitfalls and Best Practices**
 D. **Symfony-to-Go Service Mapping**
 E. **Recommended Reading**
