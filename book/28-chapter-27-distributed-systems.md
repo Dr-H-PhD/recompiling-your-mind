@@ -20,6 +20,7 @@ The CAP theorem states that a distributed system can provide at most two of thes
 
 - **Consistency**: Every read receives the most recent write
 - **Availability**: Every request receives a response
+
 - **Partition Tolerance**: The system continues operating despite network failures
 
 Since network partitions are inevitable, you must choose between consistency and availability during partitions.
@@ -658,7 +659,9 @@ func (h *HealthChecker) Handler() http.Handler {
 - **Circuit breakers**: Prevent cascade failures when dependencies are unhealthy
 - **Retries**: Use exponential backoff with jitter for transient failures
 - **Sagas**: Coordinate distributed transactions with compensating actions
+
 - **Outbox pattern**: Ensure reliable message delivery with database transactions
+
 - **Leader election**: Coordinate single-leader work using consensus systems
 - **Health checks**: Monitor dependency health for load balancer integration
 

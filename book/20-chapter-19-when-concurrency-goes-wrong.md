@@ -114,7 +114,9 @@ Previous write at 0x00c00001c0b8 by goroutine 6:
 ### Using the Race Detector
 
 - Run tests with `-race` in CI
+
 - Test under realistic concurrency (race detector needs actual concurrent access)
+
 - Races are non-deterministic—run tests multiple times
 - The race detector slows execution 2-10x; don't use in production
 

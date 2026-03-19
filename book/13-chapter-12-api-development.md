@@ -1246,11 +1246,14 @@ For PHP developers: REST is familiar territory. Use gRPC for internal services w
 - **Error responses** follow consistent structure
 - **Versioning** is implemented manually (URL or header)
 - **gRPC** provides high-performance binary communication with streaming
+
 - **Four streaming patterns**: unary, server-streaming, client-streaming, bi-directional
+
 - **Resilience**: deadlines, retries with backoff, circuit breakers
 - **TLS/mTLS** secures gRPC in production
 - **Health checks** enable load balancer and Kubernetes integration
 - **GraphQL** enables flexible queries with client-controlled data fetching
+
 - **Choose REST** for public APIs, **gRPC** for internal services, **GraphQL** for complex frontends
 
 ---

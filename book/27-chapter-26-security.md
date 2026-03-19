@@ -799,7 +799,9 @@ func corsMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
 
 - **Access control** is implemented via middleware and authorisation checks
 - **Cryptography** uses Go's `crypto` package with bcrypt for passwords
+
 - **Injection prevention** relies on parameterised queries and argument separation
+
 - **Security headers** are added via middleware
 - **Rate limiting** protects against brute force attacks
 - **TLS** should use version 1.2+ with strong cipher suites

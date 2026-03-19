@@ -359,13 +359,13 @@ func (s *PaymentService) Process(ctx context.Context, p Payment) error {
 
 ### When to Migrate
 
-✅ **Good candidates:**
+**Good candidates:**
 - High-traffic APIs
 - CPU-intensive background jobs
 - Real-time features (WebSockets, SSE)
 - Services needing concurrency
 
-❌ **Keep in PHP:**
+**Keep in PHP:**
 - Admin dashboards
 - Content management
 - Complex business logic that works

@@ -357,6 +357,7 @@ If you prefer tooling assistance, code generators like [Wire](https://github.com
 ## Summary
 
 - **PHP's pragmatism** prioritises getting things done quickly; Go's minimalism prioritises long-term maintainability
+
 - **Magic vs explicitness** is a trade-off between convenience and traceability
 - **Feature richness vs simplicity** affects code consistency across projects
 - **Dependency culture** differs significantly between the ecosystems

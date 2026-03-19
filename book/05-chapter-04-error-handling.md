@@ -102,6 +102,7 @@ More verbose? Yes. But look at what's visible:
 - Every operation that can fail is marked with `err`
 - You can see exactly how each error is handled
 - The analytics error is explicitly logged but not propagated
+
 - The error context ("validating order", "charging payment") creates an error trail
 
 ## Exceptions vs Explicit Errors: The Philosophical Divide

@@ -285,9 +285,12 @@ The goal isn't to forget PHP. It's to add Go's mental models alongside your exis
 ## Summary
 
 - **Expertise is a double-edged sword**: Your PHP knowledge filters how you see Go, often unhelpfully
+
 - **Interpreted vs compiled** changes everything about how you think about code correctness
+
 - **Dynamic vs static typing** trades flexibility for certainty
 - **Explicitness vs magic** trades convenience for clarity
+
 - **The discomfort is productive**: It means your mental models are being rewired
 
 ---

@@ -738,8 +738,8 @@ So far we've used only the standard library. But sometimes you want more structu
 
 | Need | net/http | Framework |
 |------|----------|-----------|
-| Basic routing | ✓ | ✓ |
-| Path parameters | ✓ (Go 1.22+) | ✓ |
+| Basic routing | Yes | Yes |
+| Path parameters | Yes (Go 1.22+) | Yes |
 | Route groups | Manual | Built-in |
 | Parameter validation | Manual | Built-in |
 | JSON binding | Manual | One-liner |
@@ -982,8 +982,8 @@ func authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 | Learning curve | Low | Low | Lowest |
 | JSON binding | Built-in | Built-in | Manual |
 | Validation | Built-in | Plugin | Manual |
-| Route groups | ✓ | ✓ | Manual |
-| Middleware | ✓ | ✓ | Manual |
+| Route groups | Yes | Yes | Manual |
+| Middleware | Yes | Yes | Manual |
 | WebSocket | Plugin | Built-in | Manual |
 | Dependencies | Minimal | Minimal | None |
 
@@ -1410,7 +1410,9 @@ func (h *DistributedHub) Run() {
 - **Validation** uses struct tags or manual validation
 - **Response helpers** provide consistent JSON responses
 - **Sessions** use libraries like `gorilla/sessions` or JWT
+
 - **HTTP clients** use `http.Client` with custom transport for connection pooling
+
 - **Concurrent requests** leverage goroutines for parallel API calls
 - **Gin/Echo** provide Symfony-like convenience when needed
 - **WebSockets** enable real-time communication with gorilla/websocket

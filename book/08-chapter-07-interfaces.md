@@ -268,7 +268,9 @@ Ask yourself: "Why don't I know the type here?"
 
 - **I'm writing a library for many types** → Consider generics
 - **The type varies at runtime** → Define an interface for the common behaviour
+
 - **I really don't care about the type** → `any` might be appropriate (logging, debugging)
+
 - **I'm being lazy** → Define proper types
 
 ## Comparing to Symfony's Interface-Driven Design

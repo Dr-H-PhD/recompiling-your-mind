@@ -1180,7 +1180,9 @@ This might seem like a step backward, but consider:
 - **Type inference** (`:=`) provides convenience without sacrificing safety
 - **Generics** solve different problems than PHP's union types
 - **Type assertions** replace `instanceof` but require more explicit handling
+
 - **Data structures**: PHP's SPL maps to Go's slices, maps, and `container/*` packages
+
 - **Memory model**: Go's concurrent GC differs from PHP's reference counting
 - **Explicit wiring** replaces type-driven dependency injection
 
