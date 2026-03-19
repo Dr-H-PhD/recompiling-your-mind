@@ -230,7 +230,7 @@ func main() {
 }
 ```
 
-### Key Differences
+### Key Differences: Database
 
 **Connection Pooling**: Built into `database/sql`—it manages a pool automatically.
 
@@ -293,7 +293,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Key Differences
+### Key Differences: Templates
 
 **Auto-escaping**: `html/template` automatically escapes HTML. Twig does too.
 

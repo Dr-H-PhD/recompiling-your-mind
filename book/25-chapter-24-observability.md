@@ -188,7 +188,7 @@ requestLatency := prometheus.NewSummary(prometheus.SummaryOpts{
 
 Distributed tracing tracks requests across services.
 
-### Setup
+### OpenTelemetry Setup
 
 ```go
 import (
