@@ -53,6 +53,7 @@ func (l *FileLogger) Error(msg string) {
 This enables decoupled design:
 
 1. **You can define interfaces where they're used**, not where implementations live
+
 2. **Third-party types can satisfy your interfaces** without modification
 3. **Small interfaces are trivial to create** after the fact
 

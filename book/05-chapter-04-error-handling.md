@@ -181,8 +181,11 @@ Every function explicitly handles or propagates errors. There's no invisible con
 Go's designers had experience with exceptions in other languages and found them problematic:
 
 1. **Invisible control flow**: Exceptions can jump anywhere, making code flow unpredictable
+
 2. **Easy to forget**: It's easy to omit `catch` blocks for exceptions you didn't know could occur
+
 3. **Cleanup complexity**: `finally` blocks and exception-safe code are error-prone
+
 4. **Performance**: Exception handling has runtime overhead
 
 Error values solve these issues:
@@ -322,7 +325,9 @@ func mustParseURL(s string) *url.URL {
 But panic should be rare. It's for:
 
 1. **Programmer errors**: Bugs that indicate broken invariants (like array out of bounds)
+
 2. **Initialisation failures**: When the program can't continue (config missing at startup)
+
 3. **Impossible states**: Conditions that "can't happen" but you want to detect
 
 Never panic for:

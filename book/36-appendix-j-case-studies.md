@@ -82,6 +82,7 @@ func (h *CatalogueHandler) Search(w http.ResponseWriter, r *http.Request) {
 1. **Start with stateless APIs:** Easiest to migrate and test
 2. **Shadow traffic is crucial:** Found edge cases before switching
 3. **Keep shared database:** Don't migrate everything at once
+
 4. **Connection pooling matters:** Go's `database/sql` handles this automatically
 
 ---
