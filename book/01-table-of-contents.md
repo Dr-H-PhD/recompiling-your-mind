@@ -210,3 +210,9 @@ B. **Standard Library Essentials**
 C. **Common Pitfalls and Best Practices**
 D. **Symfony-to-Go Service Mapping**
 E. **Recommended Reading**
+F. **Exercise Solutions**
+G. **Glossary**
+H. **Cheat Sheet**
+I. **Index**
+J. **Case Studies**
+K. **Performance Benchmarks**
