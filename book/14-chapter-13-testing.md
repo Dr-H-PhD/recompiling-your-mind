@@ -48,6 +48,8 @@ func TestAdd(t *testing.T) {
 }
 ```
 
+> **Programmer:** Go's built-in `testing` package replaces PHPUnit entirely -- there is no separate testing framework to install, configure, or maintain. The `go test ./...` command discovers and runs all test files (named `*_test.go`) across your project. Table-driven tests are the idiomatic Go pattern for parameterised testing, replacing PHPUnit's data providers. Built-in benchmarking (`testing.B`) and fuzzing (`testing.F`, added in Go 1.18) are available without any additional dependencies. The deliberate absence of an assertion library forces you to write clear `if got != want` comparisons with descriptive error messages, which produce better test output than generic `assertEquals` failures.
+
 ### Why Table-Driven?
 
 1. **Easy to add cases**: Just add a row to the table
@@ -187,6 +189,8 @@ func TestGetUser(t *testing.T) {
 2. **Explicit**: You see exactly what the mock does
 3. **Flexible**: Add any behaviour you need
 4. **No runtime reflection**: Pure Go code
+
+> **Programmer:** Go's approach to mocking is fundamentally different from PHP's Prophecy or Mockery libraries. Because Go interfaces are implicit and typically small (one to three methods), creating a manual mock struct takes only a few lines of code and requires no framework. The mock implements the interface at compile time, meaning the compiler catches any interface changes immediately -- unlike PHP mocks that can silently become outdated when the mocked class changes. For larger interfaces, tools like `mockgen` or `moq` generate mock implementations, but the Go community generally prefers keeping interfaces small enough that manual mocks are trivial to write.
 
 ### Mock Generation Tools
 

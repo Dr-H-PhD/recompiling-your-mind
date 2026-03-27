@@ -136,6 +136,8 @@ func authMiddleware(next http.Handler) http.Handler {
 }
 ```
 
+> **Programmer:** In Symfony, cross-cutting concerns like logging, authentication, and CORS are handled through kernel events, listeners, and subscribers -- a powerful but opaque system. Go's middleware pattern is radically transparent: a middleware is simply a function that takes an `http.Handler` and returns an `http.Handler`. There are no annotations, no event dispatcher, no dependency injection container. The middleware chain is constructed explicitly in your `main.go`, and the execution order is exactly what you see in the code. This means no framework magic decides which middleware runs first, and debugging a middleware issue is just reading a function, not tracing through a compiled container.
+
 ### Chaining Middleware
 
 Stack middleware by nesting:
@@ -1048,6 +1050,8 @@ func echoCreateUser(svc *UserService) echo.HandlerFunc {
 ```
 
 This is the Go equivalent of Symfony's hexagonal architecture—your domain logic stays clean.
+
+> **Programmer:** When choosing between `net/http`, Gin, and Echo, the key insight is that all three use the same underlying `net/http` server -- the frameworks are thin wrappers that add routing convenience, request binding, and middleware chaining. Unlike the gap between raw PHP and Symfony (which involves a complete paradigm shift with dependency injection containers, event dispatchers, and compiler passes), the gap between raw Go and Gin/Echo is small. Your business logic should always live in framework-agnostic service structs, with the HTTP layer being a thin adapter. This makes it trivial to switch frameworks or even expose the same logic via gRPC later.
 
 ## WebSockets: Real-Time Communication
 

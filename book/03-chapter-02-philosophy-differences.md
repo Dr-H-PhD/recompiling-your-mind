@@ -113,6 +113,8 @@ More lines of code? Absolutely. But also:
 - Every resource cleanup is visible (`defer rows.Close()`)
 - No magic—you can trace exactly what happens
 
+> **Programmer:** PHP's "batteries included" philosophy (exemplified by Laravel and Symfony) means you install a framework and get routing, ORM, authentication, caching, and event dispatching out of the box. Go's approach is "bring your own batteries" -- but the standard library is the battery pack. The `net/http`, `encoding/json`, `database/sql`, and `log/slog` packages cover 80% of web application needs without a single external dependency. This is not a limitation but a deliberate design choice: simplicity as a feature means your application has fewer moving parts, fewer upgrade conflicts, and a smaller attack surface in production.
+
 ## Explicit Over Implicit (No Magic)
 
 PHP culture embraces "magic"—behaviour that happens without explicit code. Symfony takes this further with:
@@ -248,6 +250,8 @@ func formatBytes(b int64) string {
 ```
 
 The overhead of importing a package for `formatBytes` isn't worth the dependency. In PHP, you might import `league/bytes` without thinking twice.
+
+> **Programmer:** Go's preference for composition over inheritance fundamentally changes how you design systems. In PHP, you build hierarchies -- AbstractController, ApiController, UserController -- and share behaviour through the chain. In Go, you compose small, focused types and wire them together explicitly. This feels like more work initially, but in production it means any struct can be understood in isolation, tested in isolation, and modified without ripple effects through a class hierarchy. The absence of inheritance is not a missing feature; it is an architectural guardrail that prevents the deep coupling that plagues large PHP codebases over time.
 
 ## Why Go Feels Boring (And Why That's Good)
 

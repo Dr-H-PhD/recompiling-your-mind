@@ -179,6 +179,8 @@ if !ok {
 - Sending on a closed channel panics
 - Receiving from a closed channel returns zero value and `false`
 
+> **Programmer:** PHP has no built-in equivalent to channels -- the closest analogy is a message queue like RabbitMQ or Redis, but channels are typed, thread-safe, and operate entirely in-process with zero serialisation overhead. Unbuffered channels enforce a synchronisation point where both sender and receiver must be ready simultaneously, which is ideal for handoff patterns. Buffered channels behave more like a bounded queue, smoothing out rate differences between producer and consumer goroutines. Calling `close()` on a channel is not just cleanup -- it is a deliberate signal to all receivers that no more data will arrive, enabling the `range` loop to terminate cleanly. In production Go services, channels replace the entire queue-worker infrastructure that PHP applications typically build with external systems.
+
 ## Range Over Channels
 
 The `range` keyword iterates until channel closes:
@@ -304,6 +306,8 @@ func query(requests chan<- Request, q string) Result {
     return <-response
 }
 ```
+
+> **Programmer:** The request-response pattern shown above -- embedding a response channel inside a request struct -- is how production Go services implement actor-style concurrency without an actor framework. Each request carries its own reply channel, so the server goroutine processes requests sequentially (no locks needed) whilst clients block only on their individual response. This pattern scales to sophisticated use cases like connection pooling, where a central goroutine manages shared resources and clients communicate exclusively through channels. The generator pattern, returning a `<-chan T`, is equally powerful: it lets you expose lazy, concurrent data streams with a simple `for range` loop on the consumer side. In PHP, achieving similar request-response isolation would require a message broker and correlation IDs -- channels give you this for free.
 
 ### Done Channel
 

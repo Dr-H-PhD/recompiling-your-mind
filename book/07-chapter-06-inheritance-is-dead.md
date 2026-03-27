@@ -119,6 +119,8 @@ var animal *Animal = &dog  // Error! Dog is not an Animal
 
 A `Dog` doesn't substitute for an `Animal`. There's no subtype relationship. Embedding is purely syntactic convenience for composition.
 
+> **Programmer:** The most important thing to understand about Go embedding is that it is NOT inheritance -- there is no polymorphism. A `Dog` that embeds `Animal` cannot be passed where an `*Animal` is expected, and the embedded `Animal` has no awareness of the `Dog` that contains it. PHP developers coming from `extends` and `abstract` classes must retrain their instincts entirely. In production Go, embedding is best used for composing small, focused structs (like embedding `sync.Mutex` for thread-safe types) rather than building hierarchies. If you find yourself creating chains of embeddings deeper than one level, you are recreating the very problem Go was designed to avoid.
+
 ### Embedding vs Inheritance
 
 | Inheritance | Embedding |
@@ -262,6 +264,8 @@ type User struct {
 ```
 
 Is there code duplication if `Order` has the same fields? Yes, a little. But each type is independent, understandable, and modifiable without affecting others.
+
+> **Programmer:** Design patterns change fundamentally when inheritance is removed from the toolbox. The Template Method pattern (abstract base class with hook methods) becomes a struct that accepts function fields or interface dependencies. The Strategy pattern becomes trivial -- just pass a function or interface. The Decorator pattern becomes interface wrapping, which is far more flexible than class extension. In practice, Go's "favour composition over inheritance" mantra means your code ends up with more small interfaces (often one or two methods each), more explicit wiring in `main.go`, and fewer surprises when a change in one package silently breaks another.
 
 ## Flattening Deep Hierarchies
 

@@ -247,6 +247,8 @@ if errors.Is(err, ErrNotFound) {
 
 The wrapped error message might be `"finding user 42: not found"` but `errors.Is` still recognises it as `ErrNotFound`.
 
+> **Programmer:** The `fmt.Errorf("%w", err)` wrapping verb and the `errors.Is`/`errors.As` functions form the backbone of production error handling in Go. Wrapping errors with `%w` preserves the original error in a chain while adding context at each call level, producing messages like `"processing order abc123: charging payment: dial tcp: connection refused"`. The `errors.Is` function traverses this chain to match sentinel errors (like `sql.ErrNoRows`), while `errors.As` extracts typed errors (like `*ValidationError`) from anywhere in the chain. This pattern replaces PHP's exception hierarchy with a flat, composable system that is easier to test and reason about.
+
 ## Custom Error Types (Like Symfony's Custom Exceptions)
 
 In PHP, you create custom exceptions by extending Exception:
@@ -338,6 +340,8 @@ Never panic for:
 - Any error a caller might want to handle
 
 The convention `Must*` (like `template.Must()`) indicates a function that panics on error—use only with known-good values or during initialisation.
+
+> **Programmer:** A common mistake for PHP developers transitioning to Go is using sentinel errors (like `var ErrNotFound = errors.New("not found")`) when they should use custom error types, and vice versa. The rule is straightforward: use sentinel errors when the caller only needs to know *what* happened, and use custom error types (structs implementing the `error` interface) when the caller needs additional data -- field-level validation errors, HTTP status codes, or retry metadata. In production, defining a small set of domain error types early in a project prevents the ad-hoc string matching that plagues many PHP codebases.
 
 ## Learning to Love Explicit Error Paths
 

@@ -82,6 +82,8 @@ Go process
 
 Goroutines are extremely lightweight—thousands or millions in a single process.
 
+> **Programmer:** PHP is fundamentally single-threaded: one request equals one PHP-FPM process, and within that process, all operations execute sequentially. Go's goroutines are the single biggest paradigm shift for PHP developers. A goroutine starts at roughly 2KB of stack memory (growing as needed), compared to the 20-50MB per PHP-FPM worker process. This means a single Go process can handle hundreds of thousands of concurrent operations where PHP would need hundreds of thousands of separate worker processes. The `go` keyword before a function call is all it takes to launch concurrent work -- this is Go's killer feature over PHP and the reason Go dominates in real-time systems, WebSocket servers, and high-throughput API gateways.
+
 ### Creating Goroutines
 
 ```go
@@ -216,6 +218,8 @@ func handleConnection(conn net.Conn) {
 ```
 
 This is why Go excels at WebSockets, real-time APIs, and connection-heavy workloads.
+
+> **Programmer:** The Go scheduler's G-M-P model (Goroutines, OS threads, and Processors) is entirely invisible to your application code, but understanding it explains why goroutines are so efficient. The scheduler multiplexes potentially millions of goroutines onto a small number of OS threads (typically equal to the number of CPU cores). When a goroutine blocks on I/O -- a database query, an HTTP request, a file read -- the scheduler parks it and runs another goroutine on the same thread, with no context switch overhead. This cooperative scheduling model means you never manage thread pools manually, and `go func()` is always the correct way to launch concurrent work, regardless of whether you are spawning ten or ten thousand goroutines.
 
 ## Mental Model: Thousands of Lightweight Threads
 

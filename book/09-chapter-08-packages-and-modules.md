@@ -71,6 +71,8 @@ This explicitness has benefits:
 - No magic resolution rules to remember
 - Tooling can analyse imports statically
 
+> **Programmer:** PHP namespaces and Composer autoloading let you `use` any class without thinking about how it gets loaded. Go's explicit `import` statements and the `go.mod` file replace this with a fully deterministic system. The `go get` command is roughly equivalent to `composer require`, but Go uses Minimal Version Selection (MVS) rather than Composer's "highest compatible version" strategy, which means adding a new dependency never silently upgrades existing ones. The no-circular-imports rule is enforced by the compiler and forces your package graph to be a Directed Acyclic Graph -- a constraint that Symfony's container resolves at runtime but Go resolves at design time.
+
 ## `go.mod` vs `composer.json`
 
 Both files declare project dependencies, but they work differently.
@@ -282,6 +284,8 @@ This creates a `vendor/` directory like Composer. Use when:
 - Your CI doesn't have proxy access
 
 Most Go projects use the proxy, not vendoring.
+
+> **Programmer:** Vendoring with `go mod vendor` provides a self-contained `vendor/` directory similar to Composer's, but the Go community largely moved away from vendoring once the module proxy (`proxy.golang.org`) became the default in Go 1.13. The proxy caches all published module versions indefinitely, provides cryptographic checksums via `go.sum`, and serves as a reliability layer if the original source disappears. For production deployments where network access is restricted, `go mod vendor` remains the standard approach. Either way, Go's toolchain guarantees bit-for-bit reproducible builds -- something Composer achieves only with a carefully maintained `composer.lock` file.
 
 ## Migrating a Composer Mindset
 

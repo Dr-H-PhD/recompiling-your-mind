@@ -143,6 +143,8 @@ func generateToken(length int) (string, error) {
 }
 ```
 
+> **Programmer:** PHP's most notorious vulnerability -- SQL injection via string interpolation -- is structurally harder to create in Go because `database/sql` uses `$1`, `$2` placeholder syntax that separates query structure from data at the driver level. Go's `crypto/rand` package provides cryptographically secure random number generation without needing a separate extension like PHP's `random_bytes()`, and `golang.org/x/crypto/bcrypt` is the standard for password hashing. The `crypto/tls` package in Go's standard library handles HTTPS client and server configuration with sensible defaults, and Go's `html/template` package auto-escapes all variables by context (HTML, JavaScript, CSS, URL), providing built-in XSS protection that PHP developers typically achieve via Twig's autoescaping. Always use `govulncheck` in CI to scan your dependency tree for known vulnerabilities -- it is the Go equivalent of Symfony's `security:check` command.
+
 ### A03: Injection
 
 Go's `database/sql` uses parameterised queries by default:
@@ -762,6 +764,8 @@ func (s *RotatingSecret) Get() ([]byte, error) {
     return value, nil
 }
 ```
+
+> **Programmer:** Secrets management in Go requires more discipline than in PHP because Go services are long-running processes that hold secrets in memory for the entire process lifetime, unlike PHP-FPM where each request loads secrets fresh from environment variables and discards them on exit. Use `os.Getenv()` to load secrets at startup and validate them immediately -- fail fast with a clear error message if a required secret is missing or malformed. For production deployments, integrate with HashiCorp Vault or AWS Secrets Manager and implement automatic rotation using a `sync.RWMutex`-protected wrapper that refreshes credentials on a TTL. The `crypto/tls` package supports mutual TLS (mTLS) natively, enabling service-to-service authentication without JWT tokens -- this is standard practice in zero-trust architectures and service mesh environments like Istio. Never log secrets, even at debug level, and use `crypto/subtle.ConstantTimeCompare` instead of `==` for timing-safe token comparisons.
 
 ## CORS Configuration
 

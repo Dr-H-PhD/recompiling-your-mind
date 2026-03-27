@@ -76,6 +76,8 @@ func SaveData(s Storer, key string, data []byte) error {
 
 In PHP, you'd need `RedisClient` to declare `implements Storer`—which requires modifying third-party code or wrapping it.
 
+> **Programmer:** Go's implicit interface satisfaction is arguably its most powerful feature, and `io.Reader`/`io.Writer` are the canonical examples. These two single-method interfaces permeate the entire standard library: files, HTTP request bodies, network connections, compression streams, and cryptographic hashers all implement `io.Reader`. Because satisfaction is implicit, any type you write that has a `Read([]byte) (int, error)` method automatically works with `json.NewDecoder`, `io.Copy`, `bufio.Scanner`, and hundreds of other functions. This structural typing model means you can define interfaces at the consumer side without touching the implementation, enabling a level of decoupling that PHP's explicit `implements` keyword cannot achieve.
+
 ## Small Interfaces: The `io.Reader` Philosophy
 
 PHP interfaces often have many methods:
@@ -339,6 +341,8 @@ orderservice/service.go
 ```
 
 This inverts the dependency—implementations don't know about consumers' interfaces.
+
+> **Programmer:** The Interface Segregation Principle from SOLID is not merely a best practice in Go -- it is baked into the language's design. PHP developers are accustomed to large interfaces (Symfony's `EventDispatcherInterface` has seven methods) because defining many small interfaces and requiring explicit `implements` for each creates boilerplate. In Go, one-method interfaces cost nothing to define and nothing to implement, so you naturally create `Dispatcher`, `ListenerAdder`, and `ListenerRemover` as separate contracts. The result is that your test doubles mock only what they need, your dependencies are minimal, and your packages can evolve independently.
 
 ## Summary
 

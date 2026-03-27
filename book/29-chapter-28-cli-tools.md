@@ -241,6 +241,8 @@ Usage:
 ./mycli list -limit 5
 ```
 
+> **Programmer:** Symfony Console and Go's CLI approach represent fundamentally different philosophies. Symfony Console uses a class-per-command structure with dependency injection, input/output abstractions, and interactive helpers -- powerful but heavy, requiring the full PHP runtime and Composer autoloading. Go's `flag` package and `flag.NewFlagSet` for subcommands give you 90% of what you need with zero dependencies, and the resulting binary starts in milliseconds rather than the 50-100ms PHP needs for autoloading. For complex CLIs, the `cobra` library (which powers `kubectl`, `hugo`, and GitHub's `gh`) provides nested subcommands, shell completion generation, and automatic help -- all compiling into a single binary you can distribute by copying a file. The `os.Args` slice gives you raw access to command-line arguments, whilst `flag.Parse()` handles option parsing with automatic usage messages.
+
 ### Using Cobra for Complex CLIs
 
 For sophisticated CLIs, use Cobra (powers kubectl, hugo, gh):
@@ -671,6 +673,8 @@ func TestOutput(t *testing.T) {
     }
 }
 ```
+
+> **Programmer:** Testing CLI tools in Go is significantly easier than in PHP because you can build the binary with `go build`, execute it with `exec.Command`, and assert on stdout, stderr, and exit codes in a standard `_test.go` file. The `run() error` pattern shown earlier -- where `main()` delegates to a `run` function that returns an error -- is the idiomatic way to make CLI logic testable without spawning a subprocess. For cross-platform distribution, Go's cross-compilation (`GOOS=linux GOARCH=amd64`, `GOOS=darwin GOARCH=arm64`, `GOOS=windows GOARCH=amd64`) produces native binaries from a single CI job, something impossible with PHP CLI tools. Use the `embed` package to bake default configuration files, templates, or migration scripts directly into the binary, eliminating the "missing config file" deployment failures that plague PHP CLI applications. Tools like GoReleaser automate the entire release pipeline: cross-compile, package, checksum, and publish to GitHub Releases and Homebrew.
 
 ## Complete Example: File Processing Tool
 

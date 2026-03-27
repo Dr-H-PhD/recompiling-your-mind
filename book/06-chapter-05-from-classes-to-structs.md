@@ -95,6 +95,8 @@ Use `New*` functions when you need:
 - **Unexported fields**: Access private state
 - **Non-trivial setup**: Connect, initialise, register
 
+> **Programmer:** PHP classes bundle constructors, properties, methods, and visibility into a single construct. Go strips this down to structs (data) and functions with receivers (behaviour), with no constructors, no destructors, and no magic methods. The `NewXxx()` factory function convention is not enforced by the language -- it is purely a community pattern. This means your factory functions can return `(*T, error)` to validate inputs at creation time, something PHP constructors cannot do without throwing exceptions. The exported-vs-unexported distinction (capital letter vs lowercase) operates at the package level rather than the class level, which takes adjustment but encourages cohesive package design.
+
 ## Methods as Functions with Receivers
 
 PHP methods live inside the class:
@@ -268,6 +270,8 @@ userPtr.FullName()   // Go converts to (*userPtr).FullName()
 ```
 
 This convenience can mask whether you're working with a pointer or value—be mindful when it matters.
+
+> **Programmer:** The value-vs-pointer receiver choice is the closest Go gets to PHP's pass-by-value versus pass-by-reference distinction, but it has deeper implications. In production Go, the convention is to use pointer receivers for all methods on a type if any method mutates the receiver -- mixing value and pointer receivers on the same type confuses both developers and the compiler's interface satisfaction rules. A practical guideline: if your struct has more than a few fields or holds a mutex, use pointer receivers everywhere. Small, immutable value types (like `Point{X, Y}` or `Money{Amount, Currency}`) are the exception where value receivers make the intent of immutability explicit.
 
 ## Where Did `$this` Go?
 

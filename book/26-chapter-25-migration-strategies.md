@@ -36,6 +36,8 @@ The strangler fig tree grows around its host, eventually replacing it. Apply thi
                     └─────────────────┘
 ```
 
+> **Programmer:** The strangler fig pattern is the battle-tested approach for migrating PHP monoliths to Go microservices -- never attempt a big-bang rewrite. Start by routing new API endpoints (e.g., `/api/v2/`) to a Go service whilst keeping the existing PHP application untouched behind `/api/v1/`. Both services share the same database during the transition period, with clear ownership boundaries: PHP owns existing tables, Go owns new ones. The critical enabler is shared authentication: use JWT tokens with the same signing secret in both PHP (via `firebase/php-jwt`) and Go (via `golang-jwt/jwt`), so users authenticate once and both services accept the token. This pattern lets your team gain Go experience on low-risk endpoints before migrating the high-traffic critical path.
+
 ### Routing at the Load Balancer
 
 nginx:
@@ -271,6 +273,8 @@ First Go services should be:
 - Well-defined scope
 - Good learning opportunities
 - Not time-sensitive
+
+> **Programmer:** The team transition is where most PHP-to-Go migrations fail, not the technology. Budget 4-6 weeks of dedicated learning time before expecting production-quality Go code from PHP developers, and pair them with Go-experienced reviewers who focus on idiomatic patterns rather than just correctness. The API gateway approach -- using Go itself as a reverse proxy via `httputil.ReverseProxy` -- is particularly elegant because it gives the Go team control over routing, authentication, and rate limiting while PHP continues handling business logic unchanged. During the transition, run shadow traffic (duplicating requests to both PHP and Go services and comparing responses) to validate correctness before cutting over. Track latency, memory usage, and error rates per endpoint across both services to build organisational confidence in the migration.
 
 ## Case Study: Migrating a Symfony Application
 

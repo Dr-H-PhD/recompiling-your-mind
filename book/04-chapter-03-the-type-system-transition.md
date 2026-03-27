@@ -57,6 +57,8 @@ process(42)  // Compile error: cannot use int as string
 
 The Go compiler rejects invalid code before it ever runs. There's no `strict_types` to enable—strictness is the only mode.
 
+> **Programmer:** PHP 8 added type hints, union types, and intersection types, but they remain optional -- you can still write an entire PHP application without a single type declaration. Go enforces types at compile time with no escape. The `interface{}` type (now aliased as `any`) is Go's escape hatch for truly dynamic values, but idiomatic Go code uses it sparingly. Since Go 1.18, generics have dramatically reduced the need for `any` by letting you write type-safe reusable code with constrained type parameters. If you find yourself reaching for `any` frequently, it is a strong signal that your design needs rethinking.
+
 ### What You're Giving Up
 
 PHP's dynamic typing enables powerful patterns:
@@ -506,6 +508,8 @@ func ProcessOrder[T Order](order T) { ... }  // Just use Order interface
 | Generic classes | No | Yes, generic types |
 | Type inference | Limited | Full inference from usage |
 | Constraints | None | Interface-based constraints |
+
+> **Programmer:** Generics arrived in Go 1.18 and eliminated the biggest source of type assertion boilerplate. Before generics, writing a reusable `Contains` function required `[]interface{}` and type assertions at every call site. Now you write `func Contains[T comparable](slice []T, item T) bool` once, and the compiler monomorphises it for each concrete type at build time. The rule of thumb in production Go is to use generics for data structures and utility functions (stacks, caches, map/filter/reduce), but not for business logic -- where concrete interfaces and types keep the code readable and debuggable.
 
 ## Type Assertions vs PHP's `instanceof`
 

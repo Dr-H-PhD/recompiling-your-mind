@@ -132,6 +132,8 @@ func assertEqual(t *testing.T, expected, actual any) {
 - **Performance-critical code**: Reflection is slow
 - **When types are known**: Just use the type directly
 
+> **Programmer:** PHP developers rely heavily on runtime reflection for dependency injection (Symfony Container), ORM hydration (Doctrine), and serialisation -- it is a core part of the PHP ecosystem's architecture. In Go, reflection carries a real performance cost: `reflect.ValueOf` allocates, method calls via reflection are 10-100x slower than direct calls, and reflected code bypasses the compiler's type checking entirely. The Go community's strong preference is to use code generation (`go generate`) instead, which produces plain, type-safe Go code at build time with zero runtime overhead. Tools like Wire (DI), SQLC (database), and `stringer` (enum stringers) demonstrate this philosophy: generate the boring boilerplate once, commit the output, and enjoy compile-time safety with direct-call performance. Reserve reflection for genuinely generic libraries like JSON marshallers and testing utilities where the types are truly unknown at compile time.
+
 ## Code Generation: `go generate`
 
 Go culture prefers generating code at build time over reflection at runtime.
@@ -249,6 +251,8 @@ func InitializeApp() *App {
 2. **Compile-time safety**: Errors caught during build
 3. **Better debugging**: Generated code is readable
 4. **No surprises**: What you see is what runs
+
+> **Programmer:** The `go generate` command is not a build step -- it is a development-time tool that runs arbitrary commands annotated in your source code via `//go:generate` comments. The generated files are committed to version control, so CI and deployment never need to run generators. This is a crucial distinction from PHP's runtime approach: Symfony's container compilation happens on first request (or cache warmup), whereas Go's generated code is just ordinary `.go` files that compile like everything else. Use `text/template` from the standard library to build your own generators -- it is the same template engine used by `html/template` and is surprisingly powerful for code generation. A common production pattern is to generate mock implementations of interfaces using `mockgen`, type-safe database queries using SQLC, and Protocol Buffer bindings using `protoc-gen-go`, all triggered by a single `go generate ./...` command.
 
 ## SQLC, Wire, and Other Generators
 

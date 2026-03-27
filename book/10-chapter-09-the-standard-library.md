@@ -31,6 +31,8 @@ Go's standard library provides equivalents for most of these:
 
 The gaps are intentional. Go philosophy says: if it can't be done well generically, don't include it.
 
+> **Programmer:** PHP's standard library is enormous and notoriously inconsistent -- `strpos` vs `str_replace`, `array_map` vs `array_filter` with swapped callback positions, `needle`/`haystack` argument order varying between functions. Go's standard library is far smaller but rigorously consistent: every function that can fail returns `(result, error)`, naming follows the same conventions throughout, and the API surface is curated by the Go team. For web development, `net/http` handles both server and client duties, `encoding/json` covers serialisation, and `database/sql` provides a universal database interface with built-in connection pooling. You will reach for fewer external packages than you are accustomed to in PHP.
+
 ## `net/http` vs Symfony HttpFoundation
 
 Symfony wraps PHP's superglobals in objects:
@@ -112,6 +114,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 ```
 
 The streaming model is different—you can't modify headers after writing body bytes.
+
+> **Programmer:** A subtle but critical difference from PHP is that Go's `http.ResponseWriter` streams the response incrementally. Once you call `w.Write()` or `w.WriteHeader()`, the headers are sent and cannot be modified. In Symfony, you build a complete `Response` object and send it atomically. This streaming model enables Go to handle large responses efficiently (streaming JSON arrays, file downloads) without buffering the entire response in memory. However, it means error handling middleware must wrap the `ResponseWriter` to capture the status code, since the standard writer does not expose it after being written.
 
 ## `encoding/json` vs Symfony Serializer
 

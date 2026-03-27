@@ -103,6 +103,8 @@ AP systems (Cassandra, DynamoDB, DNS) remain available but may return stale data
 | Inventory | Strong consistency | Stock levels |
 | User profiles | Eventual consistency | Display names |
 
+> **Programmer:** PHP's shared-nothing, stateless request model is actually an advantage for simple horizontal scaling -- each PHP-FPM worker is independent, so you just add more workers behind a load balancer. Go's long-running process model trades this simplicity for the ability to maintain persistent connection pools, in-memory caches, and WebSocket connections across requests. However, this means your Go services must handle distributed systems concerns that PHP delegates to external infrastructure: service discovery, circuit breaking, and consensus. gRPC (via `google.golang.org/grpc`) is the standard for service-to-service communication in Go microservices, offering code-generated client/server stubs, streaming, and built-in deadline propagation through context. For consensus and leader election, use `hashicorp/raft` or etcd's concurrency primitives rather than building your own -- distributed consensus is notoriously difficult to get right.
+
 ## Service Discovery
 
 PHP applications use static configuration. Distributed systems need dynamic service discovery.
@@ -424,6 +426,8 @@ func createOrderSaga(order *Order) *Saga {
     }
 }
 ```
+
+> **Programmer:** The Saga pattern is Go's answer to distributed transactions that PHP applications typically handle with a single database transaction wrapping multiple operations. In a microservices architecture, you cannot use a database transaction across services, so each step must have a compensating action (rollback) that undoes its effect on failure. The outbox pattern shown below solves the dual-write problem: writing to the database and publishing a message are two separate operations that can fail independently, so you write both to the database atomically and publish asynchronously from the outbox table. Use `gobreaker` (Sony's circuit breaker library) rather than rolling your own -- it handles the state machine correctly, including the half-open probe that tests whether a recovered service can handle traffic. Always implement exponential backoff with jitter in retry logic to prevent thundering herd problems when a downstream service recovers.
 
 ### Outbox Pattern
 

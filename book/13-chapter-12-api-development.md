@@ -162,6 +162,8 @@ oapi-codegen -generate types,server openapi.yaml > api.gen.go
 
 This generates types and server interfaces you implement.
 
+> **Programmer:** Go's `encoding/json` uses struct tags (`json:"field_name"`) to control serialisation, replacing Symfony's serialisation groups and normalisers. The pattern of using separate structs for API input, API output, and domain models is idiomatic Go -- it is more verbose than Symfony's annotation-based groups but eliminates the risk of accidentally exposing internal fields. For OpenAPI documentation, the `oapi-codegen` approach (spec-first, generate Go code) is gaining traction over the `swag` approach (code-first, generate spec), because it enforces a contract-driven design where the API schema is the single source of truth.
+
 ## Authentication Middleware (vs Symfony Security)
 
 Symfony Security provides:
@@ -415,6 +417,8 @@ PHP developers typically use REST. gRPC offers binary serialisation, code genera
 | Browser support | Native | Via grpc-web |
 
 Use gRPC for service-to-service communication. Use REST for public APIs and browser clients.
+
+> **Programmer:** gRPC with Protocol Buffers is a paradigm shift from PHP's REST-centric world. Where Laravel API Resources return JSON over HTTP, gRPC uses binary serialisation and HTTP/2 multiplexing for dramatically better performance in service-to-service communication. The `.proto` file serves as both the API contract and the code generator input -- running `protoc-gen-go` produces type-safe client and server stubs in Go, eliminating the hand-written serialisation boilerplate. In production microservice architectures, the common pattern is gRPC for internal service communication (where performance and type safety matter) and REST or GraphQL for public-facing APIs (where browser compatibility matters).
 
 ### Protocol Buffers
 

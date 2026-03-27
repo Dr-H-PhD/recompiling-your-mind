@@ -128,6 +128,8 @@ type Writer interface {
 }
 ```
 
+> **Programmer:** The `io.Reader` and `io.Writer` interfaces are the most important abstraction in Go's standard library, and they have no direct PHP equivalent. In PHP, `file_get_contents()` reads everything into memory and `fwrite()` writes directly -- there is no composable interface layer between different I/O sources. In Go, the same function can process data from a file, an HTTP response body, a gzip decoder, or a network socket because they all implement `io.Reader`. This composability is what makes Go's I/O so elegant: `io.Copy(dst, src)` works with any reader and any writer, `io.LimitReader` wraps any reader with a size cap, and `io.MultiWriter` fans output to multiple destinations simultaneously. Design your own functions to accept `io.Reader`/`io.Writer` parameters rather than file paths whenever possible -- this makes them testable with `strings.NewReader` and `bytes.Buffer`.
+
 Files, network connections, HTTP bodies, and buffers all implement these interfaces. This enables composable I/O:
 
 ```go
@@ -580,6 +582,8 @@ func processFilesWithPool(files []string, workers int, fn func(string) error) er
     return nil
 }
 ```
+
+> **Programmer:** PHP buffers file I/O automatically, but Go requires explicit buffering via `bufio.Scanner` and `bufio.Writer` for optimal performance -- unbuffered reads issue a system call per `Read()` invocation, which is catastrophically slow for line-by-line processing. The `bufio.Scanner` pattern is the idiomatic replacement for PHP's `fgets()` loop: it reads lines efficiently with an internal buffer and handles the newline stripping automatically. For writing, always call `writer.Flush()` before closing the file, or data sitting in the buffer will be silently lost. When processing large files concurrently, use a worker pool pattern with each goroutine handling a separate file -- Go's goroutine-per-file model is far more efficient than PHP's process-per-file approach. The `os.ReadFile` and `os.WriteFile` convenience functions are fine for small files (configuration, templates), but for anything over a few megabytes, stream the data through `io.Reader`/`io.Writer` to avoid loading the entire content into memory.
 
 ## File Locking
 

@@ -93,6 +93,8 @@ func (p *Pool) Wait() {
 }
 ```
 
+> **Programmer:** Worker pools in Go directly replace the PHP queue-worker architecture built on RabbitMQ, Redis, or Symfony Messenger. Where PHP spawns separate processes (each consuming 30-50 MB of memory), Go runs lightweight goroutines within a single process at roughly 4 KB per goroutine. The semaphore pattern using a buffered channel of empty structs (`chan struct{}`) is the idiomatic way to bound concurrency -- it is cheaper than a mutex and composes naturally with `select` for cancellation. In production, always set a maximum worker count: unbounded goroutine creation under load leads to resource exhaustion just as surely as unbounded PHP-FPM workers. The `errgroup.Group` from `golang.org/x/sync` wraps this entire pattern with proper error propagation and context cancellation, and is the recommended approach for most production workloads.
+
 ## Fan-Out/Fan-In
 
 **Fan-out**: Distribute work across multiple goroutines.
@@ -314,6 +316,8 @@ func main() {
     }
 }
 ```
+
+> **Programmer:** Rate limiting with `time.Ticker` or `golang.org/x/time/rate` replaces the external rate-limiting infrastructure PHP applications typically delegate to nginx, API gateways, or Redis-backed throttlers. The `rate.NewLimiter` implements a token bucket algorithm that is safe for concurrent use and integrates with `context.Context` for cancellation-aware waiting. In production microservices, combine rate limiting with the fan-out/fan-in pattern to build pipelines that process data at controlled throughput -- for example, limiting outbound API calls to a third-party service to 100 requests per second whilst processing thousands of items concurrently. These patterns compose cleanly: a pipeline stage can include a rate limiter, a worker pool for parallel execution, and a semaphore for resource bounding, all wired together with channels.
 
 ## Graceful Shutdown
 

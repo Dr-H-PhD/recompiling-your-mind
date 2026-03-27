@@ -127,6 +127,8 @@ if err != nil {
 user.Activate()  // Compiler guarantees this exists
 ```
 
+> **Programmer:** Static typing feels restrictive after years of PHP's flexibility, but it pays dividends at scale. The Go compiler catches entire categories of bugs -- misspelled field names, wrong argument types, nil pointer dereferences on non-pointer types -- before your code ever reaches production. Go's compilation speed (typically under one second for most projects) means this safety net costs almost nothing in iteration speed. In production systems handling thousands of requests per second, a compile-time guarantee is worth far more than a runtime hope.
+
 ## Dynamic vs Static: The Freedom You're Losing (and Gaining)
 
 PHP's dynamic typing is one of its most defining features:
@@ -259,6 +261,8 @@ as OrderRepositoryInterface value in argument to NewOrderService:
 ```
 
 Both errors tell you what's wrong. But Go's error points directly at your code and the specific missing method.
+
+> **Programmer:** The `if err != nil` pattern that replaces PHP's try/catch is the single most jarring change for PHP developers, but it becomes second nature within weeks. Unlike exceptions that can silently propagate through multiple call frames, Go's explicit error returns force you to make a conscious decision at every failure point: handle it, wrap it with context, or propagate it upward. In large production codebases, this explicitness means you can trace any error from its origin to its handler by reading the code linearly, without consulting documentation or grep-ing for catch blocks.
 
 ## The Discomfort Is the Learning
 

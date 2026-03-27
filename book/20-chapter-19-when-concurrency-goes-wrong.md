@@ -120,6 +120,8 @@ Previous write at 0x00c00001c0b8 by goroutine 6:
 - Races are non-deterministic—run tests multiple times
 - The race detector slows execution 2-10x; don't use in production
 
+> **Programmer:** PHP avoids data races entirely by design -- each request runs in its own process with its own memory, so concurrent writes to shared state simply cannot happen in-process. Go's concurrency model trades this safety for performance, meaning race conditions are your responsibility. The `-race` flag should be a non-negotiable part of your CI pipeline: add `go test -race ./...` to every build. The `go vet` tool catches additional common mistakes at compile time, including copying mutexes, unreachable code, and incorrect `printf` format strings. In production, `sync.Map` is the correct replacement for concurrent map access (regular maps panic on concurrent read/write in Go), though for most cases a `sync.RWMutex` guarding a standard map offers better performance and type safety.
+
 ### Common Race Patterns
 
 **Map access:**
@@ -292,6 +294,8 @@ func process(ctx context.Context, items []int) <-chan int {
     return results
 }
 ```
+
+> **Programmer:** Goroutine leaks are Go's equivalent of memory leaks, and they are insidious because a leaked goroutine consumes not just its stack memory but also holds references to any objects in its closure, preventing garbage collection. Monitor `runtime.NumGoroutine()` in production and alert if the count grows over time -- a steadily increasing goroutine count is a reliable indicator of leaks. The `defer close(results)` pattern is essential: always close channels in the same goroutine that owns them, using `defer` to guarantee execution even on early returns or panics. In long-running Go services replacing PHP-FPM workers, a single goroutine leak per request will eventually exhaust memory and crash the process. The `goleak` package from Uber (`go.uber.org/goleak`) can detect goroutine leaks in your test suite, catching these bugs before they reach production.
 
 ## Debugging Concurrent Code
 

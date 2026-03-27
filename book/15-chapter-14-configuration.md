@@ -58,6 +58,8 @@ But many Go developers skip `.env` files entirely, preferring:
 - Configuration files (YAML, JSON, TOML)
 - Command-line flags
 
+> **Programmer:** PHP's `.env` files and Symfony's `config/` directory provide a layered configuration system with environment-specific overrides, parameter injection, and service binding. Go has no equivalent built-in mechanism -- you read environment variables with `os.Getenv`, parse command-line flags with the `flag` package, or use libraries like `viper` for full-featured configuration. The `kelseyhightower/envconfig` library is particularly popular for 12-factor apps: it maps environment variables directly to struct fields using tags, so `MYAPP_DATABASE_URL` maps to `Config.Database.URL` automatically. The key cultural difference is that Go configuration is validated at startup and fails fast, rather than discovering missing values at request time.
+
 ## Viper vs symfony/dotenv
 
 Viper is Go's most comprehensive configuration library:
@@ -261,6 +263,8 @@ func main() {
 ```
 
 No log files—let the platform capture stdout.
+
+> **Programmer:** Go's struct-based configuration pattern with the `envconfig` or `viper` libraries produces a single, typed `Config` struct that is validated once at startup and then passed as a dependency throughout the application. This is fundamentally different from Symfony's parameter bag, where configuration values are resolved from the container at runtime and type mismatches surface only when the code path is exercised. In production Go applications, the `Config.Validate()` method at startup ensures the application either starts correctly or fails immediately with a clear error message -- there is no equivalent to Symfony's "the parameter is missing but you only discover it when that particular service is instantiated."
 
 ## Secret Management
 

@@ -65,6 +65,8 @@ handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 })
 ```
 
+> **Programmer:** Go's `log/slog` package (added in Go 1.21) is the standard library's answer to structured logging, replacing the older `log` package for production use. Unlike PHP's Monolog, which requires Composer installation and handler configuration, `slog` ships with Go and outputs structured JSON or text with zero dependencies. The key insight is that `slog` uses key-value pairs rather than interpolated strings, making log entries machine-parseable for aggregation in systems like Elasticsearch, Loki, or CloudWatch. Use `slog.With()` to create child loggers with pre-set fields (request ID, user ID) that propagate through your call stack -- this replaces Monolog's processor pattern. In production, expose a `/metrics` endpoint using `promhttp.Handler()` alongside your application routes, and register custom Prometheus counters, gauges, and histograms for business-critical measurements.
+
 ### Request Logging Middleware
 
 ```go
@@ -287,6 +289,8 @@ func main() {
 - **Liveness** (`/health`): Is the process running? Keep simple.
 - **Readiness** (`/ready`): Can the process handle traffic? Check dependencies.
 - **Startup** (`/startup`): Has the process finished initialising?
+
+> **Programmer:** Go's observability advantage over PHP is that profiling, metrics, and tracing are built into the standard library and designed for always-on production use. Import `net/http/pprof` with a blank identifier to expose live CPU profiling, heap analysis, and goroutine dumps on a debug port -- something that would require Xdebug or Blackfire extensions in PHP, neither of which is safe to run in production. OpenTelemetry tracing propagates trace context through `context.Context`, so a single request's journey across multiple Go microservices is automatically correlated without explicit correlation ID passing. The three pillars of observability -- logs (slog), metrics (Prometheus), and traces (OpenTelemetry) -- compose naturally in Go because they all thread through `context.Context` and the `io.Writer` interface. PHP's Sentry integration works similarly across both languages, but Go's panic recovery via `defer`/`recover` in middleware is more explicit than PHP's exception handling.
 
 ## Error Tracking (Sentry Integration)
 

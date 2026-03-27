@@ -47,6 +47,8 @@ for {
 
 This is the foundation for event loops in Go.
 
+> **Programmer:** The `select` statement has no equivalent in PHP -- it is a language-level multiplexer that listens on multiple channels simultaneously, executing whichever case becomes ready first. This is fundamentally different from polling: `select` blocks efficiently without consuming CPU, and when multiple cases are ready, Go randomly chooses one to prevent starvation. Combined with `time.After`, you get built-in timeout semantics that PHP developers typically implement with cURL timeout options or Guzzle middleware. The `for { select { ... } }` pattern is the idiomatic Go event loop, replacing the while-true-poll loops common in PHP daemon scripts. In production, this pattern powers everything from WebSocket handlers to background task processors.
+
 ## Context Propagation
 
 ![Context Propagation](../images/08-context-propagation.png)
@@ -301,6 +303,8 @@ Key features:
 - First error cancels the context
 - `Wait` returns the first error
 - All goroutines share the cancellable context
+
+> **Programmer:** The `context.Context` type is arguably Go's most important concurrency primitive after channels, and it has no PHP equivalent whatsoever. Every HTTP request in Go carries a context that automatically cancels when the client disconnects, meaning your database queries, API calls, and goroutines all stop doing wasted work immediately. The `errgroup.WithContext` pattern is the production standard for coordinating parallel operations: it launches goroutines, cancels all of them on first error, and collects the result -- replacing the boilerplate of WaitGroups, error channels, and manual context management. Always pass `context.Context` as the first parameter of any function that does I/O or might block; this convention is enforced across the entire Go standard library and ecosystem. PHP developers accustomed to request-scoped isolation via PHP-FPM should think of context as explicit request-scoped propagation through function signatures rather than implicit global state.
 
 ## Summary
 

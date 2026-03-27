@@ -166,6 +166,8 @@ user, err := queries.GetUser(ctx, 42)
 
 SQLC provides type safety without runtime overhead—the SQL is still explicit.
 
+> **Programmer:** Doctrine/Eloquent ORMs abstract SQL behind objects and methods, but the Go community largely rejects this approach. The preferred stack is `database/sql` (or `sqlx` for struct scanning and named parameters) combined with `sqlc` for code generation from raw SQL queries. With `sqlc`, you write standard SQL, and the tool generates type-safe Go functions with properly typed parameters and return values. This means your DBA can read and optimise the queries directly, your IDE provides full autocompletion on the generated types, and there is zero runtime overhead from query building or reflection. For most Go production systems, explicit SQL is not a step backward -- it is a deliberate choice for transparency.
+
 ## ORMs: GORM vs Doctrine ORM (And Why Many Skip Them)
 
 Doctrine ORM is central to Symfony:
@@ -351,6 +353,8 @@ if err != nil {
 
 return tx.Commit()  // Commit only if all succeeded
 ```
+
+> **Programmer:** Go's `database/sql` package has built-in connection pooling that is invisible but highly configurable. Unlike Doctrine's DBAL where pooling is configured via YAML and managed by the framework, Go's `sql.DB` object is the pool itself -- `sql.Open` does not open a connection, it creates a pool manager. The `defer tx.Rollback()` pattern for transactions is a Go idiom that leverages `defer` for cleanup: if `tx.Commit()` succeeds, the deferred `Rollback()` is a no-op. This eliminates the `try/catch/finally` pattern for transaction safety and makes it impossible to forget the rollback on the error path.
 
 ### Transaction Helper
 

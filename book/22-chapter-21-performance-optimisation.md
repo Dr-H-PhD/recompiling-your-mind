@@ -245,6 +245,8 @@ func createCounter() func() int {
 
 For hot paths (millions of calls), reducing allocations matters. For most code, clarity beats micro-optimisation.
 
+> **Programmer:** PHP performance tuning revolves around OPcache, preloading, and reducing database queries -- the language itself is interpreted, so there is always a VM layer between your code and the CPU. Go compiles directly to native machine code with no VM overhead, which means performance bottlenecks shift to memory allocations and CPU cache behaviour rather than interpreter overhead. The `go test -bench=. -benchmem` command is your primary weapon: it reports nanoseconds per operation, bytes allocated, and number of allocations, giving you concrete data to optimise against. Use `-gcflags='-m'` to see escape analysis decisions -- variables that escape to the heap require garbage collection, whilst stack-allocated variables are freed automatically when the function returns. In production Go services handling thousands of requests per second, reducing a hot-path function from two allocations to zero can measurably improve P99 latency.
+
 ## Pool Patterns for Allocation Reduction
 
 `sync.Pool` provides object reuse:
@@ -304,6 +306,8 @@ Go profiling is similar in concept but:
 4. **Optimise**: Fix the bottleneck
 5. **Benchmark**: Verify improvement
 6. **Repeat**: Profile again
+
+> **Programmer:** Unlike Xdebug and Blackfire, which require PHP extensions and impose significant overhead, Go's `pprof` is built into the standard library and designed for production use. Import `net/http/pprof` with a blank identifier and you get live CPU, memory, and goroutine profiling on a debug HTTP endpoint with minimal performance impact. The `benchstat` tool compares benchmark runs statistically, telling you whether a change is a genuine improvement or noise -- this replaces the guesswork of "run it a few times and eyeball the results." Use `sync.Pool` for objects that are allocated and discarded frequently (byte buffers, temporary slices, encoder states): it recycles them across goroutines, dramatically reducing GC pressure. In production, always profile before optimising -- the Go compiler's inlining, escape analysis, and register allocation often make intuitive "optimisations" counterproductive.
 
 ## Summary
 

@@ -201,6 +201,8 @@ ldd myapp
 # not a dynamic executable
 ```
 
+> **Programmer:** The combination of `CGO_ENABLED=0` and static linking is what makes Go's deployment story radically simpler than PHP's. With PHP, you deploy source code plus a runtime, extensions, Composer dependencies, and a web server -- any mismatch between development and production versions causes subtle bugs. With Go, you deploy a single binary that contains everything: your code, all dependencies, and even static assets via `embed.FS`. The `GOOS` and `GOARCH` environment variables enable cross-compilation to any supported platform from any build machine, which is impossible with PHP. A common production pattern is to build all platform binaries in CI with `go build -ldflags="-s -w"` (stripping debug symbols to reduce size by roughly 30%) and distribute them as GitHub releases or container images built `FROM scratch`.
+
 ### Embedding Files
 
 Go 1.16+ can embed files in the binary:
@@ -278,6 +280,8 @@ sudo journalctl -u myapp -f  # View logs
 - Automatic restart on crash
 - Simple log management via journald
 - Single process to monitor
+
+> **Programmer:** Docker images built `FROM scratch` contain literally nothing except your Go binary -- no shell, no libc, no package manager, resulting in images of 10-20 MB compared to 500+ MB for a typical PHP-FPM image. This dramatically reduces your attack surface (no shell means no shell injection) and speeds up container pull times. For debugging access, use `FROM alpine` instead, which adds a shell at the cost of only 5 MB. The multi-stage build pattern is essential: the first stage uses the full Go toolchain image to compile, and the second stage copies only the resulting binary into the minimal runtime image. In production Kubernetes clusters, pair this with liveness and readiness probes pointing at dedicated health endpoints, and use the `embed` package to bake your HTML templates and static assets directly into the binary so your `scratch` container is truly self-contained.
 
 ## Kubernetes Deployment
 

@@ -103,6 +103,8 @@ gostr := C.GoString(cstr)
 | Goroutine-friendly | Blocks OS threads |
 | Memory-safe | Manual memory management |
 
+> **Programmer:** PHP's FFI (introduced in PHP 7.4) and Go's cgo serve the same purpose -- calling C libraries from higher-level code -- but the trade-offs differ significantly. Each cgo call incurs roughly 100 nanoseconds of overhead due to the goroutine-to-OS-thread transition, compared to near-zero overhead for pure Go function calls. More critically, a cgo call pins an OS thread for its duration, meaning a Go service making frequent cgo calls can exhaust its thread pool and stall all goroutines. The `syscall` and `golang.org/x/sys` packages provide direct system call access without cgo, which is preferable for simple OS interactions. For low-level memory manipulation, `unsafe.Pointer` bypasses Go's type system entirely -- use it only when profiling proves a pure Go approach is inadequate, and always wrap unsafe operations behind a safe API boundary.
+
 ## Syscalls and unsafe Package
 
 For system programming without CGO:
@@ -277,6 +279,8 @@ func main() {
     // Application runs with reloadable config
 }
 ```
+
+> **Programmer:** Signal handling is entirely new territory for PHP developers -- PHP-FPM manages process lifecycle for you, so your code never sees SIGINT, SIGTERM, or SIGHUP. In Go, your binary is the process, and handling these signals correctly is essential for production reliability. The SIGHUP reload pattern shown above enables zero-downtime configuration changes, which is standard practice for long-running Go daemons. Note that the config reload requires careful concurrency: if multiple goroutines read the config, use `atomic.Value` or a `sync.RWMutex` to prevent races during the swap. In Kubernetes, SIGTERM is sent during pod termination with a configurable grace period, so your Go service must catch it, stop accepting new requests, drain in-flight work, and exit cleanly.
 
 ## Summary
 
